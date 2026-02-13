@@ -11,6 +11,10 @@ import AddTravel from "./tabs/HR/AddTravel.tsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ListTravelPlans from "./tabs/HR/ListTravelPlans.tsx";
 import { Toaster } from "sonner";
+import UpdateTravelDetails from "./tabs/HR/UpdateTravel.tsx";
+import AddUserToTravel from "./components/custom/AddUserToTravel.tsx";
+import MyTravelPlans from "./tabs/HR/MyTravelPlans.tsx";
+import UploadTravelDocuments from "./components/custom/UploadTravelDocuments.tsx";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +31,7 @@ const router = createBrowserRouter([
         index: true,
         element: (
           <ProtectedRoute requiredRole={["Employee", "HR", "Manager"]}>
-            <AddTravel />
+            <AddUserToTravel />
           </ProtectedRoute>
         ),
       },
@@ -43,12 +47,56 @@ const router = createBrowserRouter([
             ),
           },
           {
-            path: "manage/:travelId",
-            element: (
-              <ProtectedRoute requiredRole={["Employee", "HR"]}>
-                <AddTravel />
-              </ProtectedRoute>
-            ),
+            path: "manage",
+            children: [
+              {
+                path: "view/:travelId",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee", "HR"]}>
+                    <AddTravel />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "update/:travelId",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee", "HR"]}>
+                    <UpdateTravelDetails />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "add-traveler/:travelId",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee", "HR"]}>
+                    <AddUserToTravel />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "add",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <AddTravel />
+                  </ProtectedRoute>
+                )
+              },{
+                path: "my-travel-plans",
+                element: (
+                  <ProtectedRoute requiredRole={['HR', 'Employee', 'Manager']}>
+                    <MyTravelPlans/>
+                  </ProtectedRoute>
+                )
+              },
+              {
+                path: "upload-documents/:travelId",
+                element: (
+                  <ProtectedRoute requiredRole={['HR', 'Employee', 'Manager']}>
+                    <UploadTravelDocuments />
+                  </ProtectedRoute>
+                )
+              }
+            ],
           },
         ],
       },

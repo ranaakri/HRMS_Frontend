@@ -49,10 +49,6 @@ export default function TravelCard({ details }: { details: Root }) {
 
   const navigate = useNavigate();
 
-  const handleNavigate = () => {
-    navigate(`manage/${details.travelId}`)
-  }
-
   return (
     <Card className="overflow-hidden border-0 shadow-lg bg-black text-white group transition-all hover:shadow-xl max-w-4xl mx-auto m-4 border-gray-500">
       <div className="flex flex-col md:flex-row">
@@ -61,7 +57,10 @@ export default function TravelCard({ details }: { details: Root }) {
             <Carousel className="w-full">
               <CarouselContent className="">
                 {details.travelGallery.map((item, index) => (
-                  <CarouselItem key={index} className="flex items-center justify-center">
+                  <CarouselItem
+                    key={index}
+                    className="flex items-center justify-center"
+                  >
                     <img
                       src={`${imageBaseUrl}/${item.filePath}`}
                       alt={details.title}
@@ -87,7 +86,9 @@ export default function TravelCard({ details }: { details: Root }) {
 
         <div className="w-full md:w-3/5 p-6 flex flex-col justify-between space-y-4">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">{details.title}</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {details.title}
+            </h2>
             <p className="text-slate-200 line-clamp-3 text-sm leading-relaxed">
               {details.description}
             </p>
@@ -123,10 +124,33 @@ export default function TravelCard({ details }: { details: Root }) {
                 </span>
               </div>
             </div>
-            <button className="p-2 bg-white text-black rounded-md cursor-pointer" onClick={handleNavigate}>View</button>
+          </div>
+          <div className="flex gap-4">
+            <button
+              className="p-2 bg-white text-black rounded-md cursor-pointer"
+              onClick={() => navigate(`manage/update/${details.travelId}`)}
+            >
+              Update
+            </button>
+            <button
+              className="p-2 bg-white text-black rounded-md cursor-pointer"
+              onClick={() =>
+                navigate(`manage/add-traveler/${details.travelId}`)
+              }
+            >
+              Add Traveling Persons
+            </button>
+             <button
+              className="p-2 bg-white text-black rounded-md cursor-pointer"
+              onClick={() =>
+                navigate(`manage/upload-documents/${details.travelId}`)
+              }
+            >
+              Upload Documents
+            </button>
           </div>
         </div>
-      </div>    
+      </div>
     </Card>
   );
 }

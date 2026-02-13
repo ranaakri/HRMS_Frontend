@@ -10,7 +10,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { addDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import type { DateRange } from "react-day-picker";
 import {
   Select,
@@ -21,12 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { notify } from "@/components/custom/Notification";
 import { useAuth } from "@/context/AuthContext";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "@/api/api";
+import type { IAddTravelDetails } from "./AddTravel";
+import ImageContainer from "@/components/custom/ImageContainer";
 
-export interface IAddTravelDetails {
+export interface ITravelDetails {
   title: string;
   startDate: string;
   endDate: string;
@@ -35,12 +39,51 @@ export interface IAddTravelDetails {
   assignedBudget: number;
   totalExpense: number;
   createdById: number;
+  travelId: number;
+  travelGallery: TravelGallery[];
+  createdByUser: CreatedByUser;
 }
 
-export default function AddTravel() {
+export interface TravelGallery {
+  imageId: number;
+  filePath: string;
+  uploadedAt: string;
+}
+
+export interface CreatedByUser {
+  userId: number;
+  name: string;
+  email: string;
+}
+
+export default function UpdateTravelDetails() {
   const server_url = import.meta.env.VITE_SERVER_URL;
 
   const { user } = useAuth();
+
+  const { travelId } = useParams();
+
+  const navigate = useNavigate();
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+
+  const [date, setDate] = React.useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 5),
+  });
+
+  const [uploaded, setUploaded] = useState<TravelGallery[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["travelDetails"],
+    queryFn: () =>
+      axios
+        .get(server_url + `/travel/${travelId}`, { withCredentials: true })
+        .then((res) => res.data.data),
+  });
+
+  //   console.log(data);
 
   const {
     register,
@@ -48,19 +91,18 @@ export default function AddTravel() {
     control,
     formState: { errors },
     reset,
-  } = useForm();
-
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 5),
+  } = useForm<ITravelDetails>({
+    values: data,
   });
 
   const mutation = useMutation({
-    mutationFn: (data: IAddTravelDetails) => {
+    mutationFn: (data: any) => {
       console.log("This is data: ", data);
-      return axios
-        .post(server_url + "/travel", data, { withCredentials: true })
-        .then((res) => res.data.data);
+      return api
+        .put(server_url + `/travel/${travelId}`, data, {
+          withCredentials: true,
+        })
+        .then((res) => res.data);
     },
 
     onSuccess: () => {
@@ -73,25 +115,83 @@ export default function AddTravel() {
     },
   });
 
-  const onSubmit = async (data: any) => {
-    const finalData: IAddTravelDetails = {
-      ...data,
+  const onSubmit = async (data: IAddTravelDetails) => {
+    const finalData = {
+      title: data.title,
+      description: data.description,
+      status: data.status,
+      assignedBudget: data.assignedBudget,
+      totalExpense: data.totalExpense,
       startDate: date?.from?.toISOString(),
       endDate: date?.to?.toISOString(),
-      createdById: user?.userId,
+      updatedBy: user?.userId,
     };
 
-    mutation.mutateAsync(finalData);
+    console.log(mutation.mutateAsync(finalData));
   };
 
-  // if(mutation.isError) return <div className="">{mutation.error.message}</div>
+  const handleDelete = async () => {
+    try {
+      const res = confirm("Are you sure you want to delete travel.");
+      if (res === true) {
+        await axios.delete(server_url + `/travel/${travelId}`, {
+          withCredentials: true,
+        });
+        notify.success("Travel Plan deleted successfully");
+        navigate("/travel", { replace: true });
+      }
+    } catch (err: any) {
+      console.log(err);
+      notify.error("Error", err.message);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if(e.target.files && e.target.files.length > 0){
+      setSelectedFile(e.target.files[0]);
+    }
+  }
+
+  const handleImageUpload = async() => {
+    if(!selectedFile){
+      alert("Please select an image")
+      return
+    }
+
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append('files', selectedFile);
+
+    try{
+      const response = await api.post(`travel/gallery/${travelId}`, formData, {withCredentials: true}).then(res => res.data);
+      setUploaded([...uploaded, response])
+      notify.success("Image uploaded successfully")
+    }catch(error: any){
+      notify.error("Error", error.message);
+      console.log("Error in uploading image", error)
+    }
+    finally{
+      setLoading(false);
+    }
+    
+  }
+
+  if (isLoading) return <div className="">Loading...</div>;
+
+  if (isError)
+    return <div className="text-red-500">Error: {error.message}</div>;
 
   return (
     <div className="min-h-full">
-      <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 ">
-        Create New Travel Plan
-      </h2>
-      <Card className="p-5 md:p-10 mb-5 bg-linear-to-br from-sky-900 to-sky-300 border-0 text-white">
+      <Button
+        variant="outline"
+        className="m-4"
+        onClick={handleDelete}
+      >
+        Delete Travel plan
+      </Button>
+      <Card className="m-4 p-5 md:p-10 mb-5 bg-linear-to-br from-sky-900 to-sky-300 border-0 text-white">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -154,6 +254,7 @@ export default function AddTravel() {
                       <SelectItem value="ON_HOLD">On Hold</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
                       <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -173,8 +274,9 @@ export default function AddTravel() {
               className="bg-white text-black"
               {...register("assignedBudget", {
                 required: "Budget is required",
-                valueAsNumber: true,
+                min: 0,
               })}
+              min={0}
             />
             {errors.assignedBudget && (
               <p className="text-red-300 text-sm">
@@ -190,8 +292,9 @@ export default function AddTravel() {
               className="bg-white text-black"
               {...register("totalExpense", {
                 required: "Total expense is required",
-                valueAsNumber: true,
+                min: 0,
               })}
+              min={0}
             />
             {errors.totalExpense && (
               <p className="text-red-300 text-sm">
@@ -232,6 +335,51 @@ export default function AddTravel() {
           </div>
         </form>
       </Card>
+
+      <div className="border rounded-lg border-gray-400 m-4">
+        <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 ">
+          Images
+        </h2>
+
+        <hr className="text-gray-400" />
+        <div className="p-5">
+          <div className="flex gap-4">
+            <Input type="file" onChange={handleFileChange}/>
+            <Button className="bg-blue-500 text-white" onClick={handleImageUpload} disabled={loading}>Upload</Button>
+          </div>
+        </div>
+        {data?.travelGallery.length > 0 ? (
+          <div className="grid grid-cols-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 p-4">
+              {data?.travelGallery.map((item: TravelGallery) => (
+                <ImageContainer imageData={item} key={item.imageId} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-gray-500 flex items-center justify-center p-5">
+            No Images Uploaded
+          </div>
+        )}
+      </div>
+      <div className="border rounded-lg border-gray-400 m-4">
+        <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 ">
+          Uploaded Images
+        </h2>
+        {data?.travelGallery.length > 0 ? (
+          <div className="grid grid-cols-1">
+            <div className="grid grid-cols-1 md:grid-cols-3 p-4">
+              {data?.travelGallery.map((item: TravelGallery) => (
+                <ImageContainer imageData={item} key={item.imageId} />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="text-gray-500 flex items-center justify-center p-5">
+            No Images Uploaded
+          </div>
+        )}
+      </div>
     </div>
   );
 }

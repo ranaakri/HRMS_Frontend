@@ -95,7 +95,7 @@ export default function Dashboard() {
               className={`flex items-center flex-col gap-3 px-4 py-3 rounded-xl font-medium transition-all text-white bg-gray-700 justify-center shadow-gray-700 shadow-md`}
             >
               <img
-                src={"../../public/image.png"}
+                src={"../../../public/image.png"}
                 alt="no image"
                 className="w-24 h-24 rounded-full object-cover"
               />

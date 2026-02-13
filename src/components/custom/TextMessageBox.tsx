@@ -34,17 +34,22 @@ export default function TextMessageBox({
             <p className="font-bold text-lg">{name}</p>
             <div className="flex text-sm font-mono">
               <p>
-                {designation} {"<" + role + ">"} <span className="text-gray-400"> {postTime}</span>
+                {designation} {"<" + role + ">"}{" "}
+                <span className="text-gray-400"> {postTime}</span>
               </p>
             </div>
           </div>
         </div>
 
         <div className="">{message}</div>
-        <hr className="my-4 text-gray-300"/>
+        <hr className="my-4 text-gray-300" />
         <div className="flex gap-3">
-          <div className="flex items-center gap-2"><FaHeart/> {likeCount}</div>
-          <div className="flex items-center gap-2"><FaComment /> {commentCount}</div>
+          <div className="flex items-center gap-2">
+            <FaHeart /> {likeCount}
+          </div>
+          <div className="flex items-center gap-2">
+            <FaComment /> {commentCount}
+          </div>
         </div>
       </div>
     </div>
