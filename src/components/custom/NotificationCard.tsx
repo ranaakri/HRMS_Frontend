@@ -1,6 +1,6 @@
-interface Props{
-    userId: 
-}
+// interface Props{
+//     userId: 
+// }
 
 export default function NotificationCard(){
     return(

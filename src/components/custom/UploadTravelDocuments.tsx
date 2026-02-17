@@ -29,7 +29,7 @@ export default function UploadTravelDocuments() {
       api
         .get<
           TravelingUser[]
-        >(RouteList.travelingUsers + `/${travelId}`, { withCredentials: true })
+        >(RouteList.travelingUsers + `/${travelId}`)
         .then((res) => res.data),
   });
 
@@ -37,19 +37,6 @@ export default function UploadTravelDocuments() {
     if (data) setTravelingUsers(data);
   }, [data]);
 
-  // const handleFileUplaod = () => {
-  //   try{
-  //     const response = await api.post(`travel/gallery/${travelId}`, formData, {withCredentials: true}).then(res => res.data);
-  //     setUploaded([...uploaded, response])
-  //     notify.success("Image uploaded successfully")
-  //   }catch(error: any){
-  //     notify.error("Error", error.message);
-  //     console.log("Error in uploading image", error)
-  //   }
-  //   finally{
-  //     setLoading(false);
-  //   }
-  // }
 
   if (isLoading)
     return <div className="flex items-center justify-center">Loading....</div>;
@@ -70,7 +57,7 @@ export default function UploadTravelDocuments() {
           ))}
         </div>
       ) : (
-        <div className=""></div>
+        <div className="flex items-center justify-center text-gray-500">No Traveling Users</div>
       )}
     </div>
   );

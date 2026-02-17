@@ -9,6 +9,22 @@ import { useAuth } from "../context/AuthContext";
 import { FaHome } from "react-icons/fa";
 import { TbBrandInstagramFilled } from "react-icons/tb";
 import { notify } from "@/components/custom/Notification";
+import { FaGamepad } from "react-icons/fa";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { IoIosNotifications } from "react-icons/io";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import api from "@/api/api";
+import { Badge } from "@/components/ui/badge";
+import { DateOptions } from "./HR/JobManagement/ListJobs";
 
 // import { useAuth } from "./../../route_protection/AuthContext";
 // import { notify } from "./../../components/custom/Notifications";
@@ -23,22 +39,35 @@ interface menu {
   icon: React.ElementType;
 }
 
+interface Notification {
+  receiverId: number;
+  title: string;
+  description: string;
+  read: boolean;
+  time: string;
+}
+
 /* ================= MENU CONFIGS ================= */
 
 const EmployeeItems: menu[] = [
   { name: "Home", path: "", icon: FaHome },
-  { name: "Travel Management", path: "travel", icon: Briefcase },
-  { name: "Job Management", path: "candidates", icon: ClipboardList },
+  { name: "Travel Plans", path: "employee/travel", icon: Briefcase },
+  { name: "Job Sharing", path: "employee/job", icon: ClipboardList },
   { name: "Archivements", path: "userprofile", icon: TbBrandInstagramFilled },
+  { name: "Games", path: "userprofile", icon: FaGamepad },
   { name: "Settings", path: "resetpassword", icon: Settings },
 ];
 
-
 const HRItems: menu[] = [
   { name: "Home", path: "", icon: FaHome },
-  { name: "Travel Management", path: "travel", icon: Briefcase },
-  { name: "Job Management", path: "candidates", icon: ClipboardList },
-  { name: "Archivements", path: "userprofile", icon: TbBrandInstagramFilled },
+  { name: "Travel Management", path: "hr/travel", icon: Briefcase },
+  { name: "Job Management", path: "hr/job", icon: ClipboardList },
+  {
+    name: "Archivements",
+    path: "hr/userprofile",
+    icon: TbBrandInstagramFilled,
+  },
+  { name: "Games", path: "userprofile", icon: FaGamepad },
   { name: "Settings", path: "resetpassword", icon: Settings },
 ];
 
@@ -58,7 +87,8 @@ const HRItems: menu[] = [
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loadMenu, setLoadMenu] = useState<menu[]>([]);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [notification, setNotifications] = useState<Notification[]>([]);
+  const [notificationLength, setNotificationLength] = useState(0);
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -66,9 +96,24 @@ export default function Dashboard() {
   const MotionLink = motion.create(Link);
   const Motionbutton = motion.create(Button);
 
+  const getNotification = useQuery({
+    queryKey: ["Notification", user?.userId],
+    queryFn: () =>
+      api
+        .get<Notification[]>(`/notification/unread/${user?.userId}`)
+        .then((res) => res.data),
+  });
+
   useEffect(() => {
-    if(!user){
-      notify.error("User is undefined")
+    if (getNotification.data) {
+      setNotifications(getNotification.data);
+      setNotificationLength(getNotification.data.length);
+    }
+  }, [getNotification.data]);
+
+  useEffect(() => {
+    if (!user) {
+      notify.error("User is undefined");
     }
     switch (user?.role) {
       case "Employee":
@@ -78,8 +123,30 @@ export default function Dashboard() {
         setLoadMenu(HRItems);
         break;
     }
-    
   }, [user?.role]);
+
+  const markRead = useMutation({
+    mutationFn: async (receverId: number) => {
+      return await api
+        .patch(`/notification/${receverId}`)
+        .then((res) => res.data);
+    },
+    onSuccess: () => {
+      notify.success("Marked", "Notification marked as read");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.message);
+      console.error(error.cause);
+      return;
+    },
+  });
+
+  const handleMarkRead = async (receverId: number) => {
+    await markRead.mutateAsync(receverId);
+    setNotifications(notification.filter((val) => val.receiverId != receverId));
+    setNotificationLength(notificationLength-1)
+  };
 
   return (
     <div className="flex h-screen">
@@ -110,12 +177,7 @@ export default function Dashboard() {
                   key={item.name}
                   to={item.path}
                   whileHover={{ x: 5 }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all
-    ${
-      activeMenu === item.path
-        ? "bg-white/80 text-white backdrop-blur-md shadow-inner"
-        : "text-blue-50 hover:bg-white/10"
-    }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all hover:bg-white/80 hover:text-black duration-150 text-white backdrop-blur-md shadow-inner`}
                 >
                   <Icon className="w-5 h-5 opacity-90" />
                   <span className="text-sm tracking-wide">{item.name}</span>
@@ -144,10 +206,72 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Add an avatar for a more "Dashboard" feel */}
-            <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-indigo-200">
-              JD
-            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  disabled={getNotification.isPending ? true : false}
+                  className="relative"
+                >
+                  <div className="absolute h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-indigo-200">
+                    <IoIosNotifications />
+                  </div>
+                  {notificationLength > 0 && (
+                    <Badge className="absolute -top-1 -right-2 bg-red-300 border-red-600 text-white">
+                      {notificationLength}
+                    </Badge>
+                  )}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-sm md:max-w-lg bg-white">
+                <DialogHeader className="border-b p-2">
+                  <DialogTitle className="flex items-center gap-4">
+                    Notifications{" "}
+                    <Badge className="bg-red-300 border-red-600 text-white">
+                      {notificationLength}
+                    </Badge>
+                  </DialogTitle>
+                  <DialogDescription>Unread Notifications</DialogDescription>
+                </DialogHeader>
+                <div className="">
+                  {notification.length > 0 ? (
+                    notification.map((item) => (
+                      <div
+                        className="grid grid-cols-3 border border-gray-500 p-2 rounded-md"
+                        key={item.receiverId}
+                      >
+                        <div className="col-span-2">
+                          <p className="text-xs md:justify-self-end text-gray-500">
+                            {new Date(item.time).toLocaleDateString(
+                              undefined,
+                              DateOptions,
+                            )}
+                          </p>
+                          <p className="font-bold">{item.title}</p>
+                          <p className="">{item.description}</p>
+                        </div>
+                        <div className="justify-self-end flex items-center">
+                          <Button
+                            onClick={() => handleMarkRead(item.receiverId)}
+                          >
+                            Mark Read
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center text-gray-500">
+                      No Notification
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
             <Motionbutton
               variant="destructive"
               size="sm"
@@ -161,7 +285,7 @@ export default function Dashboard() {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto md:p-6 p-3">
+        <main className="flex-1 overflow-y-auto md:p-6 p-3 bg-gray-200">
           <Outlet />
         </main>
       </div>

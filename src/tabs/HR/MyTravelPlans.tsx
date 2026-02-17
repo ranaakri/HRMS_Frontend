@@ -9,15 +9,14 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function MyTravelPlans() {
+  const { user } = useAuth();
 
-    const {user} = useAuth();
-
-    useEffect(() => {
-        if(!user){
-            notify.error("Error", "User id not defined");
-            return;
-        }
-    }, []);
+  useEffect(() => {
+    if (!user) {
+      notify.error("Error", "User id not defined");
+      return;
+    }
+  }, []);
 
   const navigate = useNavigate();
 
@@ -25,7 +24,9 @@ export default function MyTravelPlans() {
     queryKey: ["list"],
     queryFn: () =>
       api
-        .get(RouteList.listMyTravelPlans + user?.userId, { withCredentials: true })
+        .get("/travel/traveling-user/user/" + user?.userId, {
+          withCredentials: true,
+        })
         .then((res) => res.data.data),
   });
 
@@ -35,23 +36,33 @@ export default function MyTravelPlans() {
 
   return (
     <div className="">
-      <Button
-        variant={"outline"}
-        className="m-4 cursor-pointer"
-        onClick={() => navigate("/travel/manage/add")}
-      >
-        Add New Travel Plan
-      </Button>
-      <Button
-        variant={"outline"}
-        className="m-4 cursor-pointer"
-        onClick={() => navigate("/travel")}
-      >
-        All
-      </Button>
-      {data.map((item: any, index: number) => (
-        <TravelCard details={item} key={index} />
-      ))}
+      {user?.role === "HR" && (
+        <div className="">
+          <Button
+            variant={"outline"}
+            className="m-4 cursor-pointer"
+            onClick={() => navigate("/hr/travel/manage/add")}
+          >
+            Add New Travel Plan
+          </Button>
+          <Button
+            variant={"outline"}
+            className="m-4 cursor-pointer"
+            onClick={() => navigate("/hr/travel")}
+          >
+            All
+          </Button>
+        </div>
+      )}
+      {data.length > 0 ? (
+        data.map((item: any, index: number) => (
+          <TravelCard details={item} key={index} expense={true} />
+        ))
+      ) : (
+        <div className="flex items-center justify-center text-gray-900">
+          No Travel plans
+        </div>
+      )}
     </div>
   );
 }

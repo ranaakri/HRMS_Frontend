@@ -191,7 +191,7 @@ export default function UpdateTravelDetails() {
       >
         Delete Travel plan
       </Button>
-      <Card className="m-4 p-5 md:p-10 mb-5 bg-linear-to-br from-sky-900 to-sky-300 border-0 text-white">
+      <Card className="m-4 p-5 md:p-10 mb-5 bg-white border-0">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
@@ -321,7 +321,7 @@ export default function UpdateTravelDetails() {
             <Button
               type="button"
               onClick={() => reset()}
-              className="bg-white text-black hover:bg-gray-300 cursor-pointer"
+              className="bg-black text-white hover:bg-gray-300 cursor-pointer"
             >
               Reset
             </Button>
@@ -336,16 +336,15 @@ export default function UpdateTravelDetails() {
         </form>
       </Card>
 
-      <div className="border rounded-lg border-gray-400 m-4">
-        <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 ">
+      <div className="rounded-lg border-0 m-4 bg-white">
+        <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 pt-4">
           Images
         </h2>
 
-        <hr className="text-gray-400" />
         <div className="p-5">
           <div className="flex gap-4">
             <Input type="file" onChange={handleFileChange}/>
-            <Button className="bg-blue-500 text-white" onClick={handleImageUpload} disabled={loading}>Upload</Button>
+            <Button className="bg-black text-white" onClick={handleImageUpload} disabled={loading}>Upload</Button>
           </div>
         </div>
         {data?.travelGallery.length > 0 ? (
@@ -354,24 +353,11 @@ export default function UpdateTravelDetails() {
               {data?.travelGallery.map((item: TravelGallery) => (
                 <ImageContainer imageData={item} key={item.imageId} />
               ))}
-            </div>
-          </div>
-        ) : (
-          <div className="text-gray-500 flex items-center justify-center p-5">
-            No Images Uploaded
-          </div>
-        )}
-      </div>
-      <div className="border rounded-lg border-gray-400 m-4">
-        <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 ">
-          Uploaded Images
-        </h2>
-        {data?.travelGallery.length > 0 ? (
-          <div className="grid grid-cols-1">
-            <div className="grid grid-cols-1 md:grid-cols-3 p-4">
-              {data?.travelGallery.map((item: TravelGallery) => (
-                <ImageContainer imageData={item} key={item.imageId} />
-              ))}
+              {
+                uploaded.map((item: TravelGallery) => (
+                  <ImageContainer imageData={item} key={item.imageId} />
+                ))
+              }
             </div>
           </div>
         ) : (

@@ -9,7 +9,6 @@ export default function ImageContainer({
 }: {
   imageData: TravelGallery;
 }) {
-  const image_url = import.meta.env.VITE_IMAGE_URL;
 
   const handleDelete = async () => {
     try {
@@ -27,10 +26,10 @@ export default function ImageContainer({
   };
 
   return (
-    <Card className="flex items-center justify-center border-0 p-2 m-2 bg-linear-150 from-sky-500 to-sky-900">
+    <Card className="flex items-center justify-center border-0 p-2 m-2 bg-gray-200 shadow-md">
       <div className="">
         <img
-          src={image_url + "/" + imageData.filePath}
+          src={imageData.filePath}
           alt="no image"
           className="h-50 w-full rounded-md border object-cover"
         />

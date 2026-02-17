@@ -1,11 +1,9 @@
 import api from "@/api/api";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { RouteList } from "@/api/routes";
-import { notify } from "./Notification";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import type { TravelingUser } from "./UploadTravelDocuments";
 import {
   Select,
   SelectContent,
@@ -13,9 +11,11 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "../ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { notify } from "@/components/custom/Notification";
+import { useParams } from "react-router-dom";
 
 export interface DocumentInfo {
   docId: number;
@@ -34,7 +34,7 @@ export interface UploadedBy {
 }
 
 function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
-  const options = { timeZone: "Asia/Kolkata" };
+  const options = { timeZone: "Asia/Kolkata" }
 
   const [docList, setDocList] = useState<DocumentInfo[]>([]);
 
@@ -78,36 +78,35 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
             <div className="">
               {new Date(item.uploadedAt).toLocaleDateString(undefined, options)}
             </div>
-            <div className="">
-              <Button
-                variant={"default"}
-                className="bg-red-500"
-                onClick={() => handleDeleteDoc(item.docId)}
-              >
-                Remove
-              </Button>
-            </div>
+            <Button
+              variant={"default"}
+              className="bg-red-500"
+              onClick={() => handleDeleteDoc(item.docId)}
+            >
+              Remove
+            </Button>
           </div>
         ))}
     </div>
   );
 }
 
-export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
+export default function UploadTravelingDocsEmp() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docType, setDocType] = useState<string>();
   const [uploadedDoc, setUploadedDocs] = useState<DocumentInfo[]>([]);
   const { user } = useAuth();
+  const {travelId} = useParams();
 
   const [reload, setReaload] = useState<boolean>(false);
 
   const { data } = useQuery({
-    queryKey: ["uplaodedDocuments", item.travelingUserId],
+    queryKey: ["uplaodedDocuments", user?.userId],
     queryFn: () =>
       api
         .get<
           DocumentInfo[]
-        >(RouteList.uploadedTravelingDocs + "/" + item.travelingUserId, { withCredentials: true })
+        >(`/travel/documents/user/${user?.userId}/travel/${travelId}`)
         .then((res) => res.data),
   });
 
@@ -135,13 +134,11 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    console.log(docType, user.userId, docType);
-
     try {
       const response = await api
         .post<
           DocumentInfo[]
-        >(RouteList.uploadTravelingDocs + `/${user.userId}/${item.travelingUserId}/${docType}`, formData, { withCredentials: true })
+        >(RouteList.uploadTravelingDocs + `/employee/${user.userId}/${travelId}/${docType}`, formData, { withCredentials: true })
         .then((res) => res.data);
       setReaload(!reload);
       setUploadedDocs(response);
@@ -155,8 +152,7 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
 
   return (
     <div className="p-4 rounded-md bg-white shadow-md border-0 m-2">
-      <p className="font-semibold text-black mb-2">{item.user.name}</p>
-      <p className="text-gray-600 font-mono mb-2">{item.user.email}</p>
+      <p className="font-semibold text-black mb-2">My Documents</p>
       {!(user?.role === "Manager") && (
         <div className="flex gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

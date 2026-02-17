@@ -1,42 +1,24 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from './api';
+import api from "./api";
 
-const AxiosInterceptor = ({ children } :any) => {
-  const navigate = useNavigate();
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-  useEffect(() => {
-    const resInterceptor = (response : any) => {
-      return response.data;
-    };
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const res = await api.post("/refresh");
+        const token = res.data.accessToken;
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-    const errInterceptor = (error: any) => {
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            navigate('/login');
-            break;
-          case 404:
-            navigate('/404');
-            break;
-          case 500:
-            navigate('/500');
-            break;
-          default:
-        }
+        originalRequest.headers["Authorization"] = `Bearer ${token}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        console.error("Referesh faild");
+        window.location.href = "/login"
       }
-
-      return Promise.reject(error);
-    };
-
-    const interceptor = api.interceptors.response.use(resInterceptor, errInterceptor);
-
-    return () => {
-      api.interceptors.response.eject(interceptor);
-    };
-  }, [navigate]);
-
-  return children;
-};
-
-export default AxiosInterceptor;
+    }
+    return Promise.reject(error);
+  },
+);
