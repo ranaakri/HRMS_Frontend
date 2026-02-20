@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/carousel";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Wallet } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { notify } from "./Notification";
@@ -54,13 +54,12 @@ export default function TravelCard({
   details: Root;
   expense: boolean;
 }) {
-  const navigate = useNavigate();
 
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) {
-      notify.error("User undefined");
+      notify.error("Logged out", "Please login again");
       return;
     }
   }, []);
@@ -187,6 +186,22 @@ export default function TravelCard({
                   to={`manage/expense/${details.travelId}`}
                 >
                   Manage Expense
+                </Link>
+                <Link
+                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={`manage/upload-documents/${details.travelId}`}
+                >
+                  Upload Document
+                </Link>
+              </div>
+            )}
+             {user?.role === "Manager" && (
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <Link
+                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={`manage/traveling-users/${details.travelId}`}
+                >
+                  Traveling Users
                 </Link>
               </div>
             )}

@@ -8,6 +8,15 @@ import { Button } from "@/components/ui/button";
 import { notify } from "@/components/custom/Notification";
 import { useAuth } from "@/context/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface IExpenseListRes {
   expenseId: number;
@@ -74,8 +83,13 @@ export default function ExpenseList({
   const [remarks, setRemarks] = useState("");
   const { user } = useAuth();
 
+  const [startDate, setStartDate] = useState();
+  const [endDate, setEndDate] = useState();
+  const [empName, setEmpName] = useState("");
+  const [status, setStatus] = useState("");
+
   const travelingUserBudget = useQuery({
-    queryKey: ["myBudget"],
+    queryKey: ["myBudget", travelId, user?.userId],
     queryFn: async () =>
       await api
         .get<IBudget>(
@@ -100,9 +114,18 @@ export default function ExpenseList({
 
   useEffect(() => {
     if (data) {
-        setExpenseList(data);
+      setExpenseList(data);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (data && status.length > 0) {
+      if(status === "ALL")
+        setExpenseList(data)
+        else
+      setExpenseList(data.filter((val) => val.status === status));
+    }
+  }, [status]);
 
   const changeStatus = useMutation({
     mutationFn: async ({
@@ -113,16 +136,21 @@ export default function ExpenseList({
       statusdata: string;
     }) => {
       return await api
-        .patch(`/travel/expense/${id}`, { status: statusdata })
+        .patch(`/travel/expense/${id}`, {
+          status: statusdata,
+          remarks: remarks,
+        })
         .then((res) => res.data);
     },
     onSuccess: () => {
       notify.success("Success", "Stauts updated successfully");
+      setRemarks("");
       return;
     },
     onError: (error: any) => {
       notify.error("Error", error.message);
       console.error(error.cause);
+      setRemarks("");
       return;
     },
   });
@@ -172,13 +200,31 @@ export default function ExpenseList({
           <h2 className="text-2xl font-bold text-gray-500 bg-white">
             Expense List
           </h2>
-          {!isForApproval && (
-            <div className="mt-5">
-              <Link to={"add"} className="border rounded-md p-2 px-4">
-                Add Expense
-              </Link>
+          <div className="">
+            {!isForApproval && (
+              <div className="mt-5">
+                <Link to={"add"} className="border rounded-md p-2 px-4">
+                  Add Expense
+                </Link>
+              </div>
+            )}
+            <div className="mt-4">
+              <Select onValueChange={(value) => setStatus(value)}>
+                <SelectTrigger className="w-full max-w-48">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectGroup>
+                    <SelectLabel>Status</SelectLabel>
+                    <SelectItem value="ALL">All</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
-          )}
+          </div>
         </div>
         <div className="p-2 md:justify-self-end">
           {!isForApproval && (
@@ -255,7 +301,13 @@ export default function ExpenseList({
               <UploadedBy user={item.uploadedBy} />
               <div className="p-2">
                 <div className="p-2 font-bold">Remarks:</div>
-                <Textarea className="m-2" placeholder="Remarks..." defaultValue={item.remarks} disabled={!isForApproval} onChange={(e) => setRemarks(e.target.value)} />
+                <Textarea
+                  className="m-2"
+                  placeholder="Remarks..."
+                  defaultValue={item.remarks}
+                  disabled={!isForApproval}
+                  onChange={(e) => setRemarks(e.target.value)}
+                />
               </div>
               {isForApproval && (
                 <div className="flex gap-4 p-2">
@@ -331,7 +383,11 @@ export function ListExpsenseProofs({ proofs }: { proofs: ExpensesProof[] }) {
   return (
     <div className="flex flex-col p-2">
       {proofs.map((item, index) => (
-        <a href={item.proofFilePath} className="text-blue-500 underline" key={item.proofId + "_proof"}>
+        <a
+          href={item.proofFilePath}
+          className="text-blue-500 underline"
+          key={item.proofId + "_proof"}
+        >
           Proof {index + 1}
         </a>
       ))}

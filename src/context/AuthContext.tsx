@@ -21,7 +21,8 @@ export interface UserData {
   userId: number
   email: string
   role: Role
-  name: String
+  profileUrl: string
+  name: string
 }
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);

@@ -139,7 +139,7 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
 
   const onSubmit = (data: IUpdateJob) => {
     if (!user) {
-      notify.error("User Id not found", "Please login again");
+      notify.error("Logged out", "Please login again");
       return;
     }
 

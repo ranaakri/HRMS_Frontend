@@ -138,7 +138,7 @@ export default function UpdateTravelDetails() {
           withCredentials: true,
         });
         notify.success("Travel Plan deleted successfully");
-        navigate("/travel", { replace: true });
+        navigate("/hr/travel", { replace: true });
       }
     } catch (err: any) {
       console.log(err);

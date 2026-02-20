@@ -33,7 +33,7 @@ export default function JobShares() {
   const { jobId } = useParams();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["sharedLog"],
+    queryKey: ["sharedLog", jobId],
     queryFn: () => api.get("/job-shared/job/" + jobId).then((res) => res.data),
   });
 

@@ -25,6 +25,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/api/api";
 import { Badge } from "@/components/ui/badge";
 import { DateOptions } from "./HR/JobManagement/ListJobs";
+import { RiOrganizationChart } from "react-icons/ri";
 
 // import { useAuth } from "./../../route_protection/AuthContext";
 // import { notify } from "./../../components/custom/Notifications";
@@ -53,8 +54,27 @@ const EmployeeItems: menu[] = [
   { name: "Home", path: "", icon: FaHome },
   { name: "Travel Plans", path: "employee/travel", icon: Briefcase },
   { name: "Job Sharing", path: "employee/job", icon: ClipboardList },
+  { name: "Archivements", path: "employee/post", icon: TbBrandInstagramFilled },
+  { name: "Games", path: "employee/game", icon: FaGamepad },
+  {
+    name: "Organization",
+    path: "employee/org-chart",
+    icon: RiOrganizationChart,
+  },
+  { name: "Settings", path: "employee/org-chart", icon: Settings },
+];
+
+const ManagerItems: menu[] = [
+  { name: "Home", path: "", icon: FaHome },
+  { name: "Travel Plans", path: "manager/travel", icon: Briefcase },
+  { name: "Job Sharing", path: "manager/job", icon: ClipboardList },
   { name: "Archivements", path: "userprofile", icon: TbBrandInstagramFilled },
   { name: "Games", path: "userprofile", icon: FaGamepad },
+  {
+    name: "Organization",
+    path: "manager/org-chart",
+    icon: RiOrganizationChart,
+  },
   { name: "Settings", path: "resetpassword", icon: Settings },
 ];
 
@@ -64,10 +84,11 @@ const HRItems: menu[] = [
   { name: "Job Management", path: "hr/job", icon: ClipboardList },
   {
     name: "Archivements",
-    path: "hr/userprofile",
+    path: "hr/post",
     icon: TbBrandInstagramFilled,
   },
-  { name: "Games", path: "userprofile", icon: FaGamepad },
+  { name: "Organization", path: "hr/org-chart", icon: RiOrganizationChart },
+  { name: "Games", path: "hr/game", icon: FaGamepad },
   { name: "Settings", path: "resetpassword", icon: Settings },
 ];
 
@@ -102,6 +123,7 @@ export default function Dashboard() {
       api
         .get<Notification[]>(`/notification/unread/${user?.userId}`)
         .then((res) => res.data),
+    enabled: !!user?.userId,
   });
 
   useEffect(() => {
@@ -113,7 +135,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) {
-      notify.error("User is undefined");
+      notify.error("Logged out", "Please login again");
+      return;
     }
     switch (user?.role) {
       case "Employee":
@@ -121,6 +144,9 @@ export default function Dashboard() {
         break;
       case "HR":
         setLoadMenu(HRItems);
+        break;
+      case "Manager":
+        setLoadMenu(ManagerItems);
         break;
     }
   }, [user?.role]);
@@ -145,7 +171,7 @@ export default function Dashboard() {
   const handleMarkRead = async (receverId: number) => {
     await markRead.mutateAsync(receverId);
     setNotifications(notification.filter((val) => val.receiverId != receverId));
-    setNotificationLength(notificationLength-1)
+    setNotificationLength(notificationLength - 1);
   };
 
   return (
@@ -162,7 +188,13 @@ export default function Dashboard() {
               className={`flex items-center flex-col gap-3 px-4 py-3 rounded-xl font-medium transition-all text-white bg-gray-700 justify-center shadow-gray-700 shadow-md`}
             >
               <img
-                src={"../../../public/image.png"}
+                src={
+                  user?.profileUrl === null ||
+                  (user?.profileUrl && user?.profileUrl.trim().length === 0) ||
+                  user?.profileUrl === undefined
+                    ? "https://betterwaterquality.com/wp-content/uploads/2020/09/dummy-profile-pic-300x300-1-1.png"
+                    : user?.profileUrl
+                }
                 alt="no image"
                 className="w-24 h-24 rounded-full object-cover"
               />
@@ -222,7 +254,7 @@ export default function Dashboard() {
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-sm md:max-w-lg bg-white">
+              <DialogContent className="sm:max-w-sm md:max-w-lg bg-white max-h-100">
                 <DialogHeader className="border-b p-2">
                   <DialogTitle className="flex items-center gap-4">
                     Notifications{" "}
@@ -236,7 +268,7 @@ export default function Dashboard() {
                   {notification.length > 0 ? (
                     notification.map((item) => (
                       <div
-                        className="grid grid-cols-3 border border-gray-500 p-2 rounded-md"
+                        className="grid grid-cols-3 border border-gray-500 p-2 rounded-md my-2"
                         key={item.receiverId}
                       >
                         <div className="col-span-2">

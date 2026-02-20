@@ -26,12 +26,22 @@ import JobReferral from "./tabs/HR/JobManagement/JobReferrals.tsx";
 import ExpenseList from "./tabs/General/ExpenseList.tsx";
 import AddExpense from "./tabs/General/AddExpense.tsx";
 import UploadTravelingDocsEmp from "./tabs/Employee/travel/AddTravelDoc.tsx";
+import ListTravelPlansManager from "./tabs/Manager/ListTravelPlansManager.tsx";
+import TravelingUsersManager from "./tabs/Manager/TravelingUsersManager.tsx";
+import CreatePost from "./tabs/General/AddPost.tsx";
+import ListAllPost from "./tabs/General/ListAllPost.tsx";
+import AddGame from "./tabs/Game/AddGame.tsx";
+import ListAllGames from "./tabs/Game/ListAllGames.tsx";
+import UpdateGame from "./tabs/Game/UpdateGame.tsx";
+import ListGameSlots from "./tabs/Game/ListGameSlots.tsx";
+import OrganizationChart from "./tabs/General/OrganizationChart.tsx";
+import BookSlot from "./tabs/Game/BookSlot.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <ProtectedRoute requiredRole={["Employee", "HR"]}>
+      <ProtectedRoute requiredRole={["Employee", "HR", "Manager"]}>
         <App />
         <Toaster />
       </ProtectedRoute>
@@ -98,6 +108,69 @@ const router = createBrowserRouter([
             ],
           },
           {
+            path: "org-chart",
+            element: (
+              <ProtectedRoute requiredRole={["Employee"]}>
+                <OrganizationChart />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "game",
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["Employee"]}>
+                    <ListAllGames activeGames={false} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "slots/:gameId",
+                children: [
+                  {
+                    index: true,
+                    element: (
+                      <ProtectedRoute requiredRole={["Employee"]}>
+                        <ListGameSlots />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                    path: "book/:slotId",
+                    element: (
+                      <ProtectedRoute requiredRole={["Employee"]}>
+                        <BookSlot />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            path: "post",
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["Employee"]}>
+                    <ListAllPost />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "add",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee"]}>
+                    <CreatePost />
+                  </ProtectedRoute>
+                ),
+              },
+            ],
+          },
+          {
             path: "job",
             children: [
               {
@@ -106,22 +179,6 @@ const router = createBrowserRouter([
                   //remove hr just for testing
                   <ProtectedRoute requiredRole={["Employee"]}>
                     <ListJobsEmployee />
-                  </ProtectedRoute>
-                ),
-              },
-              {
-                path: "view/:jobId",
-                element: (
-                  <ProtectedRoute requiredRole={["Employee"]}>
-                    <UpdateJob isViewOnly={true} />
-                  </ProtectedRoute>
-                ),
-              },
-              {
-                path: "view/:jobId",
-                element: (
-                  <ProtectedRoute requiredRole={["Employe"]}>
-                    <UpdateJob isViewOnly={true} />
                   </ProtectedRoute>
                 ),
               },
@@ -141,16 +198,100 @@ const router = createBrowserRouter([
                   </ProtectedRoute>
                 ),
               },
+              {
+                path: "view/:jobId",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <UpdateJob isViewOnly={true} />
+                  </ProtectedRoute>
+                ),
+              }
             ],
           },
         ],
       },
       {
-        path: "manager/job",
+        path: "manager",
         children: [
           {
-            index: true,
-            element: <div className=""></div>,
+            path: "travel",
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <ListTravelPlansManager />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "manage",
+                children: [
+                  {
+                    path: "traveling-users/:travelId",
+                    element: (
+                      <ProtectedRoute requiredRole={["Manager"]}>
+                        <TravelingUsersManager />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            path: "org-chart",
+            element: (
+              <ProtectedRoute requiredRole={["Manager"]}>
+                <OrganizationChart />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "job",
+            children: [
+              {
+                index: true,
+                element: (
+                  //remove hr just for testing
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <ListJobsEmployee />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "view/:jobId",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <UpdateJob isViewOnly={true} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "view/:jobId",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <UpdateJob isViewOnly={true} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "my-shares",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <MyShares />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "my-referrals",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <MyReferrals />
+                  </ProtectedRoute>
+                ),
+              },
+            ],
           },
         ],
       },
@@ -199,6 +340,44 @@ const router = createBrowserRouter([
                     <JobShares />
                   </ProtectedRoute>
                 ),
+              },
+              {
+                path: "share",
+
+                children: [
+                  {
+                    index: true,
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <ListJobsEmployee />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                    path: "my-shares",
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <MyShares />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                    path: "my-referrals",
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <MyReferrals />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                path: "view/:jobId",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <UpdateJob isViewOnly={true} />
+                  </ProtectedRoute>
+                ),
+              }
+                ],
               },
               {
                 path: "referrals/:jobId",
@@ -309,6 +488,64 @@ const router = createBrowserRouter([
                         requiredRole={["HR", "Employee", "Manager"]}
                       >
                         <UploadTravelDocuments />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            path: "org-chart",
+            element: (
+              <ProtectedRoute requiredRole={["HR"]}>
+                <OrganizationChart />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "game",
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <ListAllGames activeGames={false} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "add",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <AddGame />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "update/:gameId",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <UpdateGame />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "slots/:gameId",
+                children: [
+                  {
+                    index: true,
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <ListGameSlots />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                    path: "book/:slotId",
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <BookSlot />
                       </ProtectedRoute>
                     ),
                   },

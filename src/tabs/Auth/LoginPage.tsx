@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import type { IResponse } from "@/interface/IResponse";
+import { useMutation } from "@tanstack/react-query";
+import api from "@/api/api";
+import { notify } from "@/components/custom/Notification";
 
 interface IForm {
   email: string;
@@ -12,10 +15,10 @@ interface IForm {
 }
 
 export interface Data {
-  userId: number
-  email: string
-  role: Role
-  name: string
+  userId: number;
+  email: string;
+  role: Role;
+  name: string;
 }
 
 export default function LoginPage() {
@@ -28,28 +31,34 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<IForm>();
 
+  const login = useMutation({
+    mutationFn: async (data: IForm) => {
+      return await api
+        .post<Data>("http://localhost:8081/auth/login", data)
+        .then((res) => res.data);
+    },
+    onSuccess: () => {
+      notify.success("Login Success", "You have logged in successfully");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Login faild", error.response.data.message);
+      console.error(error.response);
+      return;
+    },
+  });
+
   const onSubmit = async (data: IForm) => {
     const payload = {
       email: data.email,
       password: data.password,
     };
-    try {
-      const response: IResponse<Data> = await axios.post(
-        "http://localhost:8081/auth/login",
-        payload,
-        {
-          withCredentials: true,
-        },
-      );
-      alert("Logged in successfully!");
-      localStorage.setItem("user", JSON.stringify(response.data));
-      setUser(response.data.data);
-      setLoggedin(true);
-      navigate("/", { replace: true });
-    } catch (error: any) {
-      console.error("Login Error:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Login failed");
-    }
+    const res = await login.mutateAsync(payload);
+    localStorage.setItem("user", JSON.stringify(res));
+    if(res)
+      setUser(res);
+    setLoggedin(true);
+    navigate("/", { replace: true });
   };
 
   return (
@@ -125,6 +134,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
+              disabled={login.isPending?true:false}
               className="p-2 mb-4 border bg-blue-300 text-white rounded-full hover:bg-blue-500 duration-200 m-2 cursor-pointer"
             >
               Sign in

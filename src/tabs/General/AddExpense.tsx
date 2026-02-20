@@ -139,7 +139,7 @@ export default function AddExpense() {
 
   const onSubmit = async (data: inputData) => {
     if (!user) {
-      notify.error("Please login again");
+      notify.error("Logged out", "Please login again");
       return;
     }
     if (!travelId) {

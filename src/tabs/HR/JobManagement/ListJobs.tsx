@@ -27,7 +27,6 @@ export const DateOptions: Intl.DateTimeFormatOptions = {
 };
 
 export default function ListJobs() {
-
   const columns: ColumnDef<JobResponse>[] = [
     {
       accessorKey: "title",
@@ -88,33 +87,17 @@ export default function ListJobs() {
               <DropdownMenuContent className="bg-white">
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
-                    <Link
-                      to={`view/${rowdata.jobId}`}
-                    >
-                      View
-                    </Link>
+                    <Link to={`view/${rowdata.jobId}`}>View</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem variant={'default'}>
-                    <Link
-                      to={`update/${rowdata.jobId}`}
-                    >
-                      Update
-                    </Link>
+                  <DropdownMenuItem variant={"default"}>
+                    <Link to={`update/${rowdata.jobId}`}>Update</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     {" "}
-                    <Link
-                      to={`shares/${rowdata.jobId}`}
-                    >
-                      Shares
-                    </Link>
+                    <Link to={`shares/${rowdata.jobId}`}>Shares</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link
-                      to={`referrals/${rowdata.jobId}`}
-                    >
-                      Referrals
-                    </Link>
+                    <Link to={`referrals/${rowdata.jobId}`}>Referrals</Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
@@ -144,6 +127,11 @@ export default function ListJobs() {
       <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 bg-white">
         List Jobs
       </h2>
+      <div className="">
+        <Link to={"share"} className="p-2 px-4 bg-black text-white rounded-md">
+          Share a Job
+        </Link>
+      </div>
       {data ? (
         <DataTable
           columns={columns}

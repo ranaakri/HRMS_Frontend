@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 import { notify } from "@/components/custom/Notification";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { DateOptions } from "@/tabs/HR/JobManagement/ListJobs";
 
 interface IShareEmail {
   email: string;
@@ -85,7 +86,7 @@ const ShareJobAction = ({
 
   const handleShareByEmail = (data: IShareEmail) => {
     if (!userId) {
-      notify.error("User Id not found", "Plese login again");
+      notify.error("Logged out", "Please login again");
       return;
     }
     const payload: IShareEmailPayload = {
@@ -133,7 +134,9 @@ const ShareJobAction = ({
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={shareJob.isPending ? true : false}>Share</Button>
+            <Button type="submit" disabled={shareJob.isPending ? true : false}>
+              Share
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -216,7 +219,7 @@ const ReferrJobAcction = ({
         cvPath: res.path,
         referredById: userId,
         jobId: jobId,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
       };
       publicId = res.publicId;
 
@@ -315,7 +318,14 @@ const ReferrJobAcction = ({
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit" disabled={(uploadCv.isPending || referrFriend.isPending) ? true : false}>Referr</Button>
+            <Button
+              type="submit"
+              disabled={
+                uploadCv.isPending || referrFriend.isPending ? true : false
+              }
+            >
+              Referr
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -324,7 +334,6 @@ const ReferrJobAcction = ({
 };
 
 export default function ListJobsEmployee() {
-
   const { user } = useAuth();
 
   const column: ColumnDef<JobResponse>[] = [
@@ -339,10 +348,27 @@ export default function ListJobsEmployee() {
     {
       accessorKey: "lastApplicationDate",
       header: "Last Application Date",
+      cell: ({ row }) => {
+        return (
+          <div className="">
+            {new Date(row.original.lastApplicationDate).toLocaleDateString(undefined, DateOptions)}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "createdAt",
       header: "Created At",
+      cell: ({ row }) => {
+        return (
+          <div className="">
+            {new Date(row.original.createdAt).toLocaleDateString(
+              undefined,
+              DateOptions,
+            )}
+          </div>
+        );
+      },
     },
     {
       header: "Action",
@@ -351,7 +377,7 @@ export default function ListJobsEmployee() {
         return (
           <div className="flex justify-center items-center gap-2">
             <Link
-              to={"view/"+rowdata.jobId}
+              to={"view/" + rowdata.jobId}
               className="bg-black text-white p-2 px-4 rounded-md"
             >
               View
@@ -382,7 +408,10 @@ export default function ListJobsEmployee() {
         Open Jobs
       </h2>
       <div className="flex gap-4">
-        <Link to={"my-referrals"} className="p-2 px-4 rounded-md bg-black text-white">
+        <Link
+          to={"my-referrals"}
+          className="p-2 px-4 rounded-md bg-black text-white"
+        >
           My Refferals
         </Link>
         <Link

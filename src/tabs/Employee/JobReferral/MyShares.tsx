@@ -25,11 +25,12 @@ export default function MyShares() {
   const { user } = useAuth();
 
   const { isLoading, isError, error, data } = useQuery({
-    queryKey: ["MyShares"],
+    queryKey: ["MyShares", user?.userId],
     queryFn: () =>
       api
         .get(`/job-shared/user/${user?.userId}`, { withCredentials: true })
         .then((res) => res.data),
+    enabled: !!user?.userId
   });
 
   const column: ColumnDef<IJobSharesResponse>[] = [

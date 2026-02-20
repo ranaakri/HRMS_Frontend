@@ -28,11 +28,12 @@ export default function MyReferrals() {
   const { user } = useAuth();
 
   const { isLoading, isError, error, data } = useQuery({
-    queryKey: ["MyShares"],
+    queryKey: ["MyShares", user?.userId],
     queryFn: () =>
       api
         .get(`/referral/user/${user?.userId}`, { withCredentials: true })
         .then((res) => res.data),
+    enabled: !!user?.userId
   });
 
   const column: ColumnDef<IJobReferralRes>[] = [

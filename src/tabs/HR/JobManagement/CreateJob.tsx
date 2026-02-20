@@ -153,7 +153,7 @@ export default function CreateJob() {
 
   const onSubmit = async (data: ICreateJob) => {
     if (!user) {
-      notify.error("User Id not found", "Please login again");
+      notify.error("Logged out", "Please login again");
       return;
     }
 

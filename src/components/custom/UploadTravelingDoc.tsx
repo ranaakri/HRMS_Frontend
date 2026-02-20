@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { RouteList } from "@/api/routes";
 import { notify } from "./Notification";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useAuth } from "@/context/AuthContext";
 import type { TravelingUser } from "./UploadTravelDocuments";
 import {
@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
 
 export interface DocumentInfo {
@@ -33,14 +33,32 @@ export interface UploadedBy {
   email: string;
 }
 
-function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
+function UploadedFiles({
+  uploadedDocs,
+  setUploadedDocs,
+}: {
+  uploadedDocs: DocumentInfo[];
+  setUploadedDocs: Dispatch<SetStateAction<DocumentInfo[]>>;
+}) {
   const options = { timeZone: "Asia/Kolkata" };
+  const { user } = useAuth();
 
-  const [docList, setDocList] = useState<DocumentInfo[]>([]);
-
-  useEffect(() => {
-    setDocList(uploadedDocs);
-  }, [uploadedDocs]);
+  const deleteDoc = useMutation({
+    mutationFn: async (docId: number) => {
+      return await api.delete(RouteList.uploadTravelingDocs + "/" + docId, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: () => {
+      notify.success("Document deleted succesfully");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.message);
+      console.error(error.response);
+      return;
+    },
+  });
 
   const handleDeleteDoc = async (docId: number) => {
     const res = confirm("Are you sure you want to delete document");
@@ -48,11 +66,8 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
     if (!res) return;
 
     try {
-      await api.delete(RouteList.uploadTravelingDocs + "/" + docId, {
-        withCredentials: true,
-      });
-      setDocList(docList.filter((res) => res.docId != docId));
-      notify.success("Documnet deleted successfully");
+      await deleteDoc.mutateAsync(docId);
+      setUploadedDocs(uploadedDocs.filter((res) => res.docId != docId));
     } catch (error: any) {
       console.error(error.message);
       notify.error("Error", error.message);
@@ -79,13 +94,16 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
               {new Date(item.uploadedAt).toLocaleDateString(undefined, options)}
             </div>
             <div className="">
-              <Button
-                variant={"default"}
-                className="bg-red-500"
-                onClick={() => handleDeleteDoc(item.docId)}
-              >
-                Remove
-              </Button>
+              {!(user?.role === "Manager") && (
+                <Button
+                  variant={"default"}
+                  className="bg-red-500"
+                  onClick={() => handleDeleteDoc(item.docId)}
+                  disabled={deleteDoc.isPending ? true : false}
+                >
+                  Remove
+                </Button>
+              )}
             </div>
           </div>
         ))}
@@ -98,8 +116,6 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
   const [docType, setDocType] = useState<string>();
   const [uploadedDoc, setUploadedDocs] = useState<DocumentInfo[]>([]);
   const { user } = useAuth();
-
-  const [reload, setReaload] = useState<boolean>(false);
 
   const { data } = useQuery({
     queryKey: ["uplaodedDocuments", item.travelingUserId],
@@ -128,14 +144,12 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
     }
 
     if (!user) {
-      notify.error("You are logged out", "Please login");
+      notify.error("Logged out", "Please login again");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", selectedFile);
-
-    console.log(docType, user.userId, docType);
 
     try {
       const response = await api
@@ -143,8 +157,8 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
           DocumentInfo[]
         >(RouteList.uploadTravelingDocs + `/${user.userId}/${item.travelingUserId}/${docType}`, formData, { withCredentials: true })
         .then((res) => res.data);
-      setReaload(!reload);
       setUploadedDocs(response);
+      console.log(response);
       // setUploaded([...uploaded, response])
       notify.success("Image uploaded successfully");
     } catch (error: any) {
@@ -186,7 +200,10 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
           </Button>
         </div>
       )}
-      <UploadedFiles uploadedDocs={uploadedDoc} />
+      <UploadedFiles
+        uploadedDocs={uploadedDoc}
+        setUploadedDocs={setUploadedDocs}
+      />
     </div>
   );
 }

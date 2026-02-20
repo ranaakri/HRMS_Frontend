@@ -1,44 +1,45 @@
-import { AiFillProduct } from "react-icons/ai";
-import { FaGithub } from "react-icons/fa";
 import { BiLogoGmail } from "react-icons/bi";
-import { FaPhoneAlt } from "react-icons/fa";
 
-interface Props {
-  readonly profileUrl: string;
-  readonly name: string;
-  readonly designation: string;
-  readonly department: string;
-  readonly git: string;
-  readonly email: string;
-  readonly contact: string;
+export interface Root {
+  assignedUnder: number;
+  designation: string;
+  email: string;
+  name: string;
+  profileUrl: any;
+  userId: number;
 }
 
-export default function HirarchyCard({
-  profileUrl,
-  name,
-  designation,
-  department,
-  git,
-  email,
-  contact,
-}: Props) {
+export default function HirarchyCard({ item, color }: { item: Root, color: string }) {
   return (
-    <div className="w-full min-h-screen flex justify-center items-center">
-      <div className="p-10 md:px-20 grid grid-cols-1 justify-items-center bg-gray-100 rounded-lg shadow-md border-t-6 border-blue-500 gap-2">
+    <div className="max-w-100 min-w-100">
+      <div className={`p-5 md:px-10 grid grid-cols-1 justify-items-center bg-gray-100 rounded-lg shadow-md border-t-6 border-${color}-500 gap-2`}>
         <img
-          src={profileUrl}
+          src={
+            ((item.profileUrl && item.profileUrl.trim().length === 0) ||
+            item.profileUrl === null)
+              ? "https://betterwaterquality.com/wp-content/uploads/2020/09/dummy-profile-pic-300x300-1-1.png"
+              : item.profileUrl
+          }
           alt="no image"
           className="w-24 h-24 rounded-full object-cover"
         />
-        <p className="font-bold text-xl">{name}</p>
-        <p className="text-blue-600 font-semibold">{designation}</p>
-        <p className="flex items-center gap-2 bg-gray-300 px-4 rounded-full text-sm mb-2"><AiFillProduct />{department}</p>
+        <p className="font-bold text-xl">{item.name}</p>
+        <p className="text-blue-600 font-semibold">{item.designation}</p>
         <div className="font-mono border-t border-gray-300 pt-2 text-gray-500">
-          <p className="flex gap-2 items-center"><FaPhoneAlt/>{contact}</p>
-          <p className="flex gap-2 items-center"><BiLogoGmail />{email}</p>
-          <p className="flex gap-2 items-center"><FaGithub/>{git}</p>
+          <p className="flex gap-2 items-center">
+            <BiLogoGmail />
+            {item.email}
+          </p>
         </div>
       </div>
     </div>
   );
+}
+
+function AssignedUnder() {
+  return (
+    <div className="">
+      
+    </div>
+  )
 }
