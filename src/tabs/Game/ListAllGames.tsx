@@ -113,12 +113,28 @@ export default function ListAllGames({
 
 function GamesCard({ game, active }: { game: Games; active: boolean }) {
   const { user } = useAuth();
+  console.log(game);
 
-  const [interest, setInterest] = useState<boolean>(!game.interested);
+  const [interest, setInterest] = useState<boolean>(game.interested);
 
   const addAsInterest = useMutation({
     mutationFn: async (data: GameInterest) => {
       return await api.post("/game-interest", data).then((res) => res.data);
+    },
+    onSuccess: () => {
+      notify.success("Success!!", "Game is added as interest");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.log(error.response);
+      return;
+    },
+  });
+
+  const removeAsInterest = useMutation({
+    mutationFn: async (data: GameInterest) => {
+      return await api.delete("/game-interest", {data: data}).then((res) => res.data);
     },
     onSuccess: () => {
       notify.success("Success!!", "Game is added as interest");
@@ -141,6 +157,18 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
       gameId: game.gameId,
     });
     setInterest(true);
+  };
+
+  const handleRemoveInterest = async () => {
+    if (!user) {
+      notify.error("Logged out", "Please login again");
+      return;
+    }
+    await removeAsInterest.mutateAsync({
+      userId: user?.userId,
+      gameId: game.gameId,
+    });
+    setInterest(false);
   };
 
   return (
@@ -182,7 +210,17 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
           <FaBookmark />
           Book a Slot
         </Link>
-        {interest === true && (
+        {interest ? (
+          <Button
+            type="button"
+            className="bg-red-500 text-white p-2 py-5 rounded-md flex items-center gap-2"
+            onClick={() => handleRemoveInterest()}
+            disabled={addAsInterest.isPending ? true : false}
+          >
+            <MdAdd />
+            Remove As Interested
+          </Button>
+        ) : (
           <Button
             type="button"
             className="bg-black text-white p-2 py-5 rounded-md flex items-center gap-2"

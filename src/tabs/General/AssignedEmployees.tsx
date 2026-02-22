@@ -35,7 +35,7 @@ export default function AssignedEmployees({
   return (
     open && (
       <Card className="bg-white p-5">
-        <div className="grid gird-cols-1 md:grid-cols-2">
+        <div className="flex flex-row items-center gap-4">
           {list.length > 0 ? (
             list.map((item) => (
               <div className="cursor-pointer" onClick={() => setSelectedUserId(item.userId)}>

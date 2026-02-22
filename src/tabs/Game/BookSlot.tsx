@@ -11,6 +11,14 @@ import { Input } from "@/components/ui/input";
 import type { User } from "../General/ExpenseList";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { type CreatedByUser } from "../HR/UpdateTravel";
+
+const DateOptions: Intl.DateTimeFormatOptions = {
+  timeZone: "Asia/Kolkata",
+  hour: "numeric",
+  minute: "numeric",
+  hour12: true,
+};
 
 interface BookSlot {
   userIds: number[];
@@ -30,40 +38,179 @@ export interface RequestedBy {
   userId: number;
 }
 
-export default function BookSlot() {
-  const { gameId } = useParams();
-  const { slotId } = useParams();
+export interface SlotInfo {
+  endTime: string;
+  slotId: number;
+  startTime: string;
+  status: string;
+}
 
-  const [bookings, setBooking] = useState<BookingResponse[]>([]);
+export default function BookSlot() {
+  const { gameId, slotId } = useParams();
+
+  const { user } = useAuth();
+
+  
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["game", gameId],
     queryFn: () => api.get(`/game/${gameId}`).then((res) => res.data),
   });
 
+  const slotData = useQuery({
+    queryKey: ["slotInfo", slotId],
+    queryFn: () =>
+      api.get(`/game/slots/info/${slotId}`).then((res) => res.data),
+    enabled: !!slotId,
+  });
+
+  const slotInfo: SlotInfo | undefined = slotData.data;
+
+  const checkBooking = useQuery({
+    queryKey: ["checkhasBooking", user?.userId, slotId],
+    queryFn: async () =>
+      await api
+        .get(`/game-bookings/check-booking/user/${user?.userId}/slot/${slotId}`)
+        .then((res) => res.data),
+    enabled: !!user?.userId && !!slotId,
+  });
+
+  const hasBooking = checkBooking.data;
+
+  const getStatus = useQuery({
+    queryKey: ["checkhasBooking", user?.userId, slotId, hasBooking],
+    queryFn: async () => {
+      return await api
+        .get(`/game-bookings/get/user/${user?.userId}/slot/${slotId}`)
+        .then((res) => res.data);
+    },
+    enabled: !!user?.userId && !!slotId && !!hasBooking && !!checkBooking.data,
+  });
+
   const bookingList = useQuery({
     queryKey: ["bookingList", slotId],
     queryFn: async () => {
-      const data = await api
-        .get(`/game/bookings/${slotId}`)
-        .then((res) => res.data);
-      setBooking(data);
-      return data;
+      return await api.get(`/game-bookings/${slotId}`).then((res) => res.data);
     },
     enabled: !!slotId,
   });
 
-  if (isLoading)
+  const bookingsData: BookingResponse[] = bookingList.data || [];
+
+  const bookingPartners = useQuery({
+    queryKey: ["getBookingPartners", user?.userId, slotId],
+    queryFn: async () => {
+      const data = await api
+        .get(`/game-bookings/partners/user/${user?.userId}/slot/${slotId}`)
+        .then((res) => res.data);
+      return data;
+    },
+    enabled: !!user?.userId && !!slotId && !!checkBooking.data,
+  });
+
+  const gamePartner: CreatedByUser[] = bookingPartners.data || [];
+
+  const deleteBooking = useMutation({
+    mutationFn: async () => {
+      await api
+        .delete(`/game-bookings`, {
+          data: { slotId: slotId, requestedBy: user?.userId },
+        })
+        .then((res) => res.data);
+    },
+    onSuccess: () => {
+      notify.success("Booking request deleted");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+      return;
+    },
+  });
+
+  if (isLoading || slotData.isLoading)
     return <div className="flex items-center justify-center">Loading...</div>;
 
-  if (isError)
-    return <div className="text-red-500">Error: {error.message}</div>;
+  if (isError || slotData.isError)
+    return (
+      <div className="text-red-500">
+        Error: {error?.message || slotData.error?.message}
+      </div>
+    );
+
+  if (!data || !slotInfo) {
+    return (
+      <div className="flex items-center justify-center">
+        Game or Slot information not found.
+      </div>
+    );
+  }
+
+  const renderBookingAction = () => {
+    if (checkBooking.isLoading) return <div>Checking booking...</div>;
+
+    if (hasBooking) {
+      if (getStatus.isLoading) return <div>Loading status...</div>;
+      return (
+        <div className="p-4 border rounded bg-blue-50">
+          {getStatus.data ? (
+            <div className="">
+              <div className="flex justify-between items-center">
+                <span className="font-bold">
+                  Your Booking Status: {getStatus.data || "PENDING"}
+                </span>
+
+                {slotInfo.startTime &&
+                  new Date() < new Date(slotInfo.startTime) && (
+                    <Button
+                      variant={"destructive"}
+                      className="bg-red-400 ml-5"
+                      type="button"
+                      onClick={() => deleteBooking.mutate()}
+                      disabled={deleteBooking.isPending}
+                    >
+                      Delete
+                    </Button>
+                  )}
+              </div>
+              <div className="flex mt-2 gap-4">
+                {bookingPartners.isSuccess && gamePartner.length > 0 ? (
+                  gamePartner.map((item) => (
+                    <div
+                      className="p-2 bg-white rounded-md border"
+                      key={item.userId + "_user"}
+                    >
+                      {item.name}
+                    </div>
+                  ))
+                ) : (
+                  <div className="">No game partners found</div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className=""></div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="">
+        {slotInfo.startTime && new Date() < new Date(slotInfo.startTime) && (
+          <AddUserToGame min={data.minPlayers} max={data.maxPlayers} />
+        )}
+      </div>
+    );
+  };
+
   return (
     <Card className="grid grid-cols-1 md:grid-cols-3 p-2 min-h-full bg-white">
       <div className="col-span-2">
         <div className="flex flex-col gap-2 border-r p-5 min-h-full">
-          <GamesCard game={data} active={false} />
-          <AddUserToGame min={data.minPlayers} max={data.maxPlayers} />
+          <GamesCard game={data} slot={slotInfo} active={false} />
+          {renderBookingAction()}
         </div>
       </div>
       <div className="">
@@ -73,14 +220,16 @@ export default function BookSlot() {
           <div className="">Error: {bookingList.error.message}</div>
         ) : (
           <div className="">
-            <div className="text-gray-500 text-xl mb-2 overflow-auto">Bookings</div>
-            {bookings.length > 0 ? (
-              bookings.map((item, index) => (
+            <div className="text-gray-500 text-xl mb-2 overflow-auto">
+              Bookings
+            </div>
+            {bookingsData.length > 0 ? (
+              bookingsData.map((item, index) => (
                 <div
                   className="flex items-center bg-black text-white shadow-md rounded-md p-2 m-2"
                   key={item.requestId}
                 >
-                  <p className="mr-5">{index+1}.</p>
+                  <p className="mr-5">{index + 1}.</p>
                   <BookingCard item={item} />
                 </div>
               ))
@@ -103,7 +252,7 @@ function BookingCard({ item }: { item: BookingResponse }) {
   );
 }
 
-function GamesCard({ game, active }: { game: Games; active: boolean }) {
+function GamesCard({ game, active, slot }: { game: Games; active: boolean, slot: SlotInfo }) {
   return (
     <Card className="shadow-none border-0 p-5 md:p-10">
       <div className="font-bold text-2xl text-gray-700">{game.name}</div>
@@ -126,6 +275,20 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
           <b>Closing Time:</b> {game.closeTime}
         </p>
       </div>
+      <div className="flex items-center gap-4">
+        <p className="">
+          <b>Slot Start time:</b> {new Date(slot.startTime).toLocaleTimeString(
+            undefined,
+            DateOptions,
+          )}
+        </p>
+        <p className="">
+          <b>Slot Closing Time:</b> {new Date(slot.endTime).toLocaleTimeString(
+            undefined,
+            DateOptions,
+          )}
+        </p>
+      </div>
       {active && <div className="">{game.active}</div>}
     </Card>
   );
@@ -143,14 +306,18 @@ function AddUserToGame({ min, max }: { min: number; max: number }) {
       notify.error("Logged out", "Please login again");
       return;
     }
-    setGamePartner([
-      ...gamePartner,
-      {
-        userId: user.userId,
-        name: user.name,
-        email: user.email,
-      },
-    ]);
+    setGamePartner((prev) => {
+      const alreadyAdded = prev.some((u) => u.userId === user.userId);
+      if (alreadyAdded) return prev;
+      return [
+        {
+          userId: user.userId,
+          name: user.name,
+          email: user.email,
+        },
+        ...prev,
+      ];
+    });
   }, [user]);
 
   const debouncedSearch = useDebounce(search, 500);
@@ -161,7 +328,7 @@ function AddUserToGame({ min, max }: { min: number; max: number }) {
       return;
     }
 
-    if (search.length < 2) {
+    if (debouncedSearch.length < 2) {
       setUserList([]);
       return;
     }
@@ -175,9 +342,9 @@ function AddUserToGame({ min, max }: { min: number; max: number }) {
   }, [debouncedSearch]);
 
   const bookSlot = useMutation({
-    mutationFn: (data: BookSlot) => api.post(`/game/bookings`, data),
+    mutationFn: (data: BookSlot) => api.post(`/game-bookings`, data),
     onSuccess: () => {
-      notify.success("Booking Confirmed", "Wait for the approval.");
+      notify.success("Booking Request Sent", "Wait for the approval.");
       setGamePartner([]);
     },
     onError: (err: any) => {
@@ -208,6 +375,14 @@ function AddUserToGame({ min, max }: { min: number; max: number }) {
     };
     console.log(payload);
     bookSlot.mutateAsync(payload);
+  };
+
+  const handleRemoveGamePartner = (userId: number) => {
+    if (userId === user?.userId) {
+      notify.error("Error", "Can not remove your self from game");
+      return;
+    }
+    setGamePartner(gamePartner.filter((val) => val.userId != userId));
   };
 
   return (
@@ -253,8 +428,13 @@ function AddUserToGame({ min, max }: { min: number; max: number }) {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {gamePartner.map((u) => (
-              <Card key={u.userId} className="p-2 bg-gray-100">
-                {u.name}
+              <Card key={u.userId} className="p-2 bg-gray-100 flex">
+                <Button
+                  className=""
+                  onClick={() => handleRemoveGamePartner(u.userId)}
+                >
+                  {u.name}
+                </Button>
               </Card>
             ))}
           </div>

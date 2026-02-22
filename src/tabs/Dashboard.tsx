@@ -6,10 +6,15 @@ import { Briefcase, Settings, ClipboardList } from "lucide-react";
 import Logo from "../assets/images/image.png";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
-import { FaHome } from "react-icons/fa";
+import { FaHome, FaGamepad } from "react-icons/fa";
 import { TbBrandInstagramFilled } from "react-icons/tb";
 import { notify } from "@/components/custom/Notification";
-import { FaGamepad } from "react-icons/fa";
+import { IoIosNotifications } from "react-icons/io";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import api from "@/api/api";
+import { Badge } from "@/components/ui/badge";
+import { DateOptions } from "./HR/JobManagement/ListJobs";
+import { RiOrganizationChart } from "react-icons/ri";
 import {
   Dialog,
   DialogClose,
@@ -20,21 +25,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { IoIosNotifications } from "react-icons/io";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import api from "@/api/api";
-import { Badge } from "@/components/ui/badge";
-import { DateOptions } from "./HR/JobManagement/ListJobs";
-import { RiOrganizationChart } from "react-icons/ri";
 
-// import { useAuth } from "./../../route_protection/AuthContext";
-// import { notify } from "./../../components/custom/Notifications";
-// import { Isemployee } from "./../../api/Employee_Records_api";
-
-/**
- * Interface for menu items displayed in the sidebar.
- */
-interface menu {
+interface MenuItem {
   name: string;
   path: string;
   icon: React.ElementType;
@@ -48,74 +40,64 @@ interface Notification {
   time: string;
 }
 
-/* ================= MENU CONFIGS ================= */
-
-const EmployeeItems: menu[] = [
-  { name: "Home", path: "", icon: FaHome },
-  { name: "Travel Plans", path: "employee/travel", icon: Briefcase },
-  { name: "Job Sharing", path: "employee/job", icon: ClipboardList },
+const EmployeeItems: MenuItem[] = [
   { name: "Archivements", path: "employee/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "employee/game", icon: FaGamepad },
-  {
-    name: "Organization",
-    path: "employee/org-chart",
-    icon: RiOrganizationChart,
-  },
-  { name: "Settings", path: "employee/org-chart", icon: Settings },
+  { name: "Travel Plans", path: "employee/travel", icon: Briefcase },
+  { name: "Job Sharing", path: "employee/job", icon: ClipboardList },
+  { name: "Organization", path: "employee/org-chart", icon: RiOrganizationChart },
+  // { name: "Settings", path: "employee/org-chart", icon: Settings },
 ];
 
-const ManagerItems: menu[] = [
-  { name: "Home", path: "", icon: FaHome },
+const ManagerItems: MenuItem[] = [
+  { name: "Archivements", path: "manager/post", icon: TbBrandInstagramFilled },
+  { name: "Games", path: "manager/game", icon: FaGamepad },
   { name: "Travel Plans", path: "manager/travel", icon: Briefcase },
   { name: "Job Sharing", path: "manager/job", icon: ClipboardList },
-  { name: "Archivements", path: "userprofile", icon: TbBrandInstagramFilled },
-  { name: "Games", path: "userprofile", icon: FaGamepad },
-  {
-    name: "Organization",
-    path: "manager/org-chart",
-    icon: RiOrganizationChart,
-  },
-  { name: "Settings", path: "resetpassword", icon: Settings },
+  { name: "Organization", path: "manager/org-chart", icon: RiOrganizationChart },
+  // { name: "Settings", path: "resetpassword", icon: Settings },
 ];
 
-const HRItems: menu[] = [
-  { name: "Home", path: "", icon: FaHome },
+const HRItems: MenuItem[] = [
+  { name: "Archivements", path: "hr/post", icon: TbBrandInstagramFilled },
+  { name: "Games", path: "hr/game", icon: FaGamepad },
   { name: "Travel Management", path: "hr/travel", icon: Briefcase },
   { name: "Job Management", path: "hr/job", icon: ClipboardList },
-  {
-    name: "Archivements",
-    path: "hr/post",
-    icon: TbBrandInstagramFilled,
-  },
   { name: "Organization", path: "hr/org-chart", icon: RiOrganizationChart },
-  { name: "Games", path: "hr/game", icon: FaGamepad },
-  { name: "Settings", path: "resetpassword", icon: Settings },
+  // { name: "Settings", path: "resetpassword", icon: Settings },
 ];
 
-// const QuickActionIcon = ({ icon, label }: { icon: any; label: string }) => (
-//   <div className="flex flex-col items-center gap-1 group cursor-pointer">
-//     <div className="p-2 group-hover:bg-blue-500 rounded-xl transition-colors text-xl">
-//       {icon}
-//     </div>
-//     <span className="text-[10px] uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
-//       {label}
-//     </span>
-//   </div>
-// );
-
-/* ================= COMPONENT ================= */
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loadMenu, setLoadMenu] = useState<menu[]>([]);
-  const [notification, setNotifications] = useState<Notification[]>([]);
-  const [notificationLength, setNotificationLength] = useState(0);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const MotionLink = motion.create(Link);
-  const Motionbutton = motion.create(Button);
+  const MotionButton = motion.create(Button);
+
+  useEffect(() => {
+    if (!user) {
+      notify.error("Logged out", "Please login again");
+      return;
+    }
+
+    switch (user.role) {
+      case "Employee":
+        setMenuItems(EmployeeItems);
+        break;
+      case "HR":
+        setMenuItems(HRItems);
+        break;
+      case "Manager":
+        setMenuItems(ManagerItems);
+        break;
+    }
+  }, [user]);
+
 
   const getNotification = useQuery({
     queryKey: ["Notification", user?.userId],
@@ -129,79 +111,57 @@ export default function Dashboard() {
   useEffect(() => {
     if (getNotification.data) {
       setNotifications(getNotification.data);
-      setNotificationLength(getNotification.data.length);
     }
   }, [getNotification.data]);
 
-  useEffect(() => {
-    if (!user) {
-      notify.error("Logged out", "Please login again");
-      return;
-    }
-    switch (user?.role) {
-      case "Employee":
-        setLoadMenu(EmployeeItems);
-        break;
-      case "HR":
-        setLoadMenu(HRItems);
-        break;
-      case "Manager":
-        setLoadMenu(ManagerItems);
-        break;
-    }
-  }, [user?.role]);
-
   const markRead = useMutation({
-    mutationFn: async (receverId: number) => {
-      return await api
-        .patch(`/notification/${receverId}`)
-        .then((res) => res.data);
-    },
-    onSuccess: () => {
-      notify.success("Marked", "Notification marked as read");
-      return;
-    },
-    onError: (error: any) => {
-      notify.error("Error", error.message);
-      console.error(error.cause);
-      return;
-    },
+    mutationFn: async (receiverId: number) =>
+      api.patch(`/notification/${receiverId}`).then((res) => res.data),
+    onSuccess: () => notify.success("Marked", "Notification marked as read"),
+    onError: (error: any) =>
+      notify.error("Error", error?.message || "Something went wrong"),
   });
 
-  const handleMarkRead = async (receverId: number) => {
-    await markRead.mutateAsync(receverId);
-    setNotifications(notification.filter((val) => val.receiverId != receverId));
-    setNotificationLength(notificationLength - 1);
+  const handleMarkRead = async (receiverId: number) => {
+    await markRead.mutateAsync(receiverId);
+    setNotifications((prev) =>
+      prev.filter((val) => val.receiverId !== receiverId),
+    );
+  };
+
+
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Sidebar */}
+    <div className="flex h-screen overflow-hidden">
+
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-linear-to-t from-sky-500 to-black shadow-lg transition-transform duration-300
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-64"}
-        md:translate-x-0 md:static md:block`}
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+        md:translate-x-0 md:static`}
       >
-        <div className="flex flex-col h-full">
-          <nav className="flex-1 px-4 py-6 space-y-2">
-            <div
-              className={`flex items-center flex-col gap-3 px-4 py-3 rounded-xl font-medium transition-all text-white bg-gray-700 justify-center shadow-gray-700 shadow-md`}
-            >
-              <img
-                src={
-                  user?.profileUrl === null ||
-                  (user?.profileUrl && user?.profileUrl.trim().length === 0) ||
-                  user?.profileUrl === undefined
-                    ? "https://betterwaterquality.com/wp-content/uploads/2020/09/dummy-profile-pic-300x300-1-1.png"
-                    : user?.profileUrl
-                }
-                alt="no image"
-                className="w-24 h-24 rounded-full object-cover"
-              />
-              <div className="">{user?.name}</div>
-              <div className="font-mono text-sm">{user?.email}</div>
-            </div>
-            {loadMenu.map((item) => {
+        <div className="flex flex-col h-full p-4 text-white">
+
+          <div className="flex flex-col items-center gap-3 p-4 bg-gray-800 rounded-xl shadow-md">
+            <img
+              src={
+                user?.profileUrl?.trim()
+                  ? user.profileUrl
+                  : "https://betterwaterquality.com/wp-content/uploads/2020/09/dummy-profile-pic-300x300-1-1.png"
+              }
+              className="w-20 h-20 rounded-full object-cover"
+            />
+            <div>{user?.name}</div>
+            <div className="text-sm font-mono">{user?.email}</div>
+          </div>
+
+          <nav className="flex-1 mt-6 space-y-2">
+            {menuItems.map((item) => {
               const Icon = item.icon;
 
               return (
@@ -209,10 +169,11 @@ export default function Dashboard() {
                   key={item.name}
                   to={item.path}
                   whileHover={{ x: 5 }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all hover:bg-white/80 hover:text-black duration-150 text-white backdrop-blur-md shadow-inner`}
+                  onClick={() => handleNavClick(item.path)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-medium hover:bg-white hover:text-black transition"
                 >
-                  <Icon className="w-5 h-5 opacity-90" />
-                  <span className="text-sm tracking-wide">{item.name}</span>
+                  <Icon className="w-5 h-5" />
+                  <span className="text-sm">{item.name}</span>
                 </MotionLink>
               );
             })}
@@ -220,82 +181,84 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="flex items-center justify-between h-16 px-8 bg-black backdrop-blur-md border-b shadow-gray-500 shadow-md">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex-1 flex flex-col">
+
+        <header className="flex items-center justify-between h-16 px-6 bg-black shadow-md">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              className="md:hidden text-gray-600"
+              className="md:hidden text-white"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
               <Menu className="w-6 h-6" />
             </Button>
-            <h1 className="text-lg font-semibold text-slate-800 hidden md:block">
-              <img src={Logo} className="h-10 w-auto object-cover" />
-            </h1>
+
+            <img src={Logo} className="h-8 hidden md:block" />
           </div>
 
           <div className="flex items-center gap-4">
+
             <Dialog>
               <DialogTrigger asChild>
-                <Button
-                  disabled={getNotification.isPending ? true : false}
-                  className="relative"
-                >
+                <Button className="relative">
                   <div className="absolute h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-indigo-200">
                     <IoIosNotifications />
                   </div>
-                  {notificationLength > 0 && (
-                    <Badge className="absolute -top-1 -right-2 bg-red-300 border-red-600 text-white">
-                      {notificationLength}
+                  {notifications.length > 0 && (
+                    <Badge className="absolute -top-1 -right-2 bg-red-500 text-white">
+                      {notifications.length}
                     </Badge>
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-sm md:max-w-lg bg-white max-h-100">
-                <DialogHeader className="border-b p-2">
-                  <DialogTitle className="flex items-center gap-4">
-                    Notifications{" "}
-                    <Badge className="bg-red-300 border-red-600 text-white">
-                      {notificationLength}
-                    </Badge>
+
+              <DialogContent className="max-h-96 overflow-y-auto bg-white">
+                <DialogHeader>
+                  <DialogTitle>
+                    Notifications
                   </DialogTitle>
-                  <DialogDescription>Unread Notifications</DialogDescription>
+                  <DialogDescription>
+                    Unread notifications
+                  </DialogDescription>
                 </DialogHeader>
-                <div className="">
-                  {notification.length > 0 ? (
-                    notification.map((item) => (
-                      <div
-                        className="grid grid-cols-3 border border-gray-500 p-2 rounded-md my-2"
-                        key={item.receiverId}
-                      >
-                        <div className="col-span-2">
-                          <p className="text-xs md:justify-self-end text-gray-500">
-                            {new Date(item.time).toLocaleDateString(
-                              undefined,
-                              DateOptions,
-                            )}
-                          </p>
-                          <p className="font-bold">{item.title}</p>
-                          <p className="">{item.description}</p>
-                        </div>
-                        <div className="justify-self-end flex items-center">
-                          <Button
-                            onClick={() => handleMarkRead(item.receiverId)}
-                          >
-                            Mark Read
-                          </Button>
-                        </div>
+
+                {notifications.length > 0 ? (
+                  notifications.map((item) => (
+                    <div
+                      key={item.receiverId}
+                      className="border p-3 rounded-md my-2 flex justify-between"
+                    >
+                      <div>
+                        <p className="text-xs text-gray-500">
+                          {new Date(item.time).toLocaleDateString(
+                            undefined,
+                            DateOptions,
+                          )}
+                        </p>
+                        <p className="font-semibold">{item.title}</p>
+                        <p>{item.description}</p>
                       </div>
-                    ))
-                  ) : (
-                    <div className="flex items-center justify-center text-gray-500">
-                      No Notification
+                      <Button
+                        size="sm"
+                        onClick={() => handleMarkRead(item.receiverId)}
+                      >
+                        Mark Read
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-500">
+                    No Notifications
+                  </div>
+                )}
+
                 <DialogFooter>
                   <DialogClose asChild>
                     <Button variant="outline">Close</Button>
@@ -304,22 +267,21 @@ export default function Dashboard() {
               </DialogContent>
             </Dialog>
 
-            <Motionbutton
+            <MotionButton
               variant="destructive"
               size="sm"
-              className="rounded-full px-5 text-xs font-semibold hover:bg-gray-200 hover:text-black hover:opacity-50"
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.05 }}
               onClick={() => navigate("/logout", { replace: true })}
             >
               Logout
-            </Motionbutton>
+            </MotionButton>
           </div>
         </header>
 
-        {/* Content */}
-        <main className="flex-1 overflow-y-auto md:p-6 p-3 bg-gray-200">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-100">
           <Outlet />
         </main>
+
       </div>
     </div>
   );

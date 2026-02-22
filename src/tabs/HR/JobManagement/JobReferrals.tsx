@@ -75,6 +75,7 @@ export default function JobReferral() {
 
 function CandidateCard({ item }: { item: IJobReferralsRes }) {
   const [status, setStatus] = useState(item.status);
+  console.log(item.status)
 
   const changeStatus = useMutation({
     mutationFn: () => {
@@ -82,9 +83,11 @@ function CandidateCard({ item }: { item: IJobReferralsRes }) {
         .patch(`/referral/${item.referralId}?status=${status}`)
         .then((res) => res.data);
     },
+
     onSuccess: () => {
       notify.success("Success", "Status successfully changed");
     },
+
     onError: (error) => {
       notify.error("Error", error.message);
       console.error(error.cause);
@@ -130,7 +133,7 @@ function CandidateCard({ item }: { item: IJobReferralsRes }) {
           </SelectTrigger>
           <SelectContent>
             <SelectGroup className="bg-white text-black">
-              <SelectItem value="UNDERPENDING">Pending</SelectItem>
+              <SelectItem value="PENDING">Pending</SelectItem>
               <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
               <SelectItem value="SELECTED">Selected</SelectItem>
               <SelectItem value="REJECTED">Rejected</SelectItem>

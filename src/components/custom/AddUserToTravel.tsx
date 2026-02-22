@@ -17,6 +17,7 @@ export interface IUserList {
 
 interface User {
   userId: number;
+  name: string;
   travelBalance: number;
 }
 
@@ -90,8 +91,8 @@ export default function AddUserToTravel() {
           <h3 className="font-bold text-lg">Selected Users</h3>
 
           {travelingUsers.map((u) => (
-            <Card key={u.userId} className="p-2 bg-gray-100">
-              User ID: {u.userId} — Balance: ₹{u.travelBalance}
+            <Card key={u.userId} className="p-2 bg-gray-100" onClick={() => setTravelingUsers(travelingUsers.filter(val => val.userId != u.userId))}>
+              {u.name} — Balance: ₹{u.travelBalance}
             </Card>
           ))}
 

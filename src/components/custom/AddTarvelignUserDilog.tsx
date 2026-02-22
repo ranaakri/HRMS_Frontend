@@ -34,7 +34,7 @@ export default function AddTravelingUserDialog({
 
     setTravelingUsers([
       ...travelingUsers,
-      { userId: user.userId, travelBalance: data.travelBalance },
+      { userId: user.userId,name: user.name , travelBalance: data.travelBalance },
     ]);
   };
 

@@ -3,6 +3,7 @@ import { Card } from "../ui/card";
 import type { TravelGallery } from "./TravelCard";
 import { notify } from "./Notification";
 import api from "@/api/api";
+import { MdDelete } from "react-icons/md";
 
 export default function ImageContainer({
   imageData,
@@ -27,22 +28,25 @@ export default function ImageContainer({
 
   return (
     <Card className="flex items-center justify-center border-0 p-2 m-2 bg-gray-200 shadow-md">
-      <div className="">
-        <img
+      <div className="relative">
+        <a target="_blank"
+        href={imageData.filePath}
+        >
+          <img
           src={imageData.filePath}
           alt="no image"
           className="h-50 w-full rounded-md border object-cover"
         />
-      </div>
-      <div className="">
+        </a>
         <Button
           variant={"destructive"}
-          className="bg-red-500 hover:bg-red-800 duration-200 cursor-pointer"
+          className="bg-red-400 border-red-600 hover:bg-red-600 duration-200 cursor-pointer absolute top-2 end-2 rounded-full"
           onClick={handleDelete}
         >
-          delete
+          <MdDelete />
         </Button>
       </div>
+      
     </Card>
   );
 }

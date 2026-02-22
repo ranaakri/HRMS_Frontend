@@ -1,10 +1,14 @@
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.tsx";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import LoginPage from "./tabs/Auth/LoginPage.tsx";
 import { ProtectedRoute } from "./routesProtection/ProtectedRoutes.tsx";
-import AuthContextProvier from "./context/AuthContext.tsx";
+import AuthContextProvier, { useAuth } from "./context/AuthContext.tsx";
 import UnauthorizedPage from "./tabs/Auth/UnauthorizedPage.tsx";
 import Logout from "./tabs/Auth/Logout.tsx";
 import AddTravel from "./tabs/HR/AddTravel.tsx";
@@ -28,14 +32,33 @@ import AddExpense from "./tabs/General/AddExpense.tsx";
 import UploadTravelingDocsEmp from "./tabs/Employee/travel/AddTravelDoc.tsx";
 import ListTravelPlansManager from "./tabs/Manager/ListTravelPlansManager.tsx";
 import TravelingUsersManager from "./tabs/Manager/TravelingUsersManager.tsx";
-import CreatePost from "./tabs/General/AddPost.tsx";
-import ListAllPost from "./tabs/General/ListAllPost.tsx";
 import AddGame from "./tabs/Game/AddGame.tsx";
 import ListAllGames from "./tabs/Game/ListAllGames.tsx";
 import UpdateGame from "./tabs/Game/UpdateGame.tsx";
 import ListGameSlots from "./tabs/Game/ListGameSlots.tsx";
 import OrganizationChart from "./tabs/General/OrganizationChart.tsx";
 import BookSlot from "./tabs/Game/BookSlot.tsx";
+import Home from "./tabs/Post/Home.tsx";
+import ListAllPost from "./tabs/Post/ListAllPost.tsx";
+import CreatePost from "./tabs/Post/AddPost.tsx";
+import EditPost from "./tabs/Post/EditPost.tsx";
+
+function DefaultLanding() {
+  const { user } = useAuth();
+
+  if (!user) return null;
+
+  switch (user.role) {
+    case "Employee":
+      return <Navigate to="/employee/post" replace />;
+    case "HR":
+      return <Navigate to="/hr/post" replace />;
+    case "Manager":
+      return <Navigate to="/manager/post" replace />;
+    default:
+      return <Navigate to="/unauthorized" replace />;
+  }
+}
 
 const router = createBrowserRouter([
   {
@@ -48,13 +71,8 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: "/",
         index: true,
-        element: (
-          <ProtectedRoute requiredRole={["Employee", "HR", "Manager"]}>
-            <AddUserToTravel />
-          </ProtectedRoute>
-        ),
+        element: <DefaultLanding />,
       },
       {
         path: "employee",
@@ -122,7 +140,7 @@ const router = createBrowserRouter([
                 index: true,
                 element: (
                   <ProtectedRoute requiredRole={["Employee"]}>
-                    <ListAllGames activeGames={false} />
+                    <ListAllGames activeGames={true} />
                   </ProtectedRoute>
                 ),
               },
@@ -151,12 +169,17 @@ const router = createBrowserRouter([
           },
           {
             path: "post",
+            element: (
+              <ProtectedRoute requiredRole={["Employee"]}>
+                <Home />
+              </ProtectedRoute>
+            ),
             children: [
               {
                 index: true,
                 element: (
                   <ProtectedRoute requiredRole={["Employee"]}>
-                    <ListAllPost />
+                    <ListAllPost myPost={false} />
                   </ProtectedRoute>
                 ),
               },
@@ -165,6 +188,22 @@ const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute requiredRole={["Employee"]}>
                     <CreatePost />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "mypost",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee"]}>
+                    <ListAllPost myPost={true} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "update/:postId",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee"]}>
+                    <EditPost />
                   </ProtectedRoute>
                 ),
               },
@@ -205,7 +244,7 @@ const router = createBrowserRouter([
                     <UpdateJob isViewOnly={true} />
                   </ProtectedRoute>
                 ),
-              }
+              },
             ],
           },
         ],
@@ -232,6 +271,40 @@ const router = createBrowserRouter([
                     element: (
                       <ProtectedRoute requiredRole={["Manager"]}>
                         <TravelingUsersManager />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            path: "game",
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <ListAllGames activeGames={true} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "slots/:gameId",
+                children: [
+                  {
+                    index: true,
+                    element: (
+                      <ProtectedRoute requiredRole={["Manager"]}>
+                        <ListGameSlots />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                    path: "book/:slotId",
+                    element: (
+                      <ProtectedRoute requiredRole={["Manager"]}>
+                        <BookSlot />
                       </ProtectedRoute>
                     ),
                   },
@@ -288,6 +361,48 @@ const router = createBrowserRouter([
                 element: (
                   <ProtectedRoute requiredRole={["Manager"]}>
                     <MyReferrals />
+                  </ProtectedRoute>
+                ),
+              },
+            ],
+          },
+          {
+            path: "post",
+            element: (
+              <ProtectedRoute requiredRole={["Manager"]}>
+                <Home />
+              </ProtectedRoute>
+            ),
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <ListAllPost myPost={false} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "add",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <CreatePost />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "mypost",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <ListAllPost myPost={true} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "update/:postId",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <EditPost />
                   </ProtectedRoute>
                 ),
               },
@@ -370,13 +485,13 @@ const router = createBrowserRouter([
                     ),
                   },
                   {
-                path: "view/:jobId",
-                element: (
-                  <ProtectedRoute requiredRole={["HR"]}>
-                    <UpdateJob isViewOnly={true} />
-                  </ProtectedRoute>
-                ),
-              }
+                    path: "view/:jobId",
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <UpdateJob isViewOnly={true} />
+                      </ProtectedRoute>
+                    ),
+                  },
                 ],
               },
               {
@@ -550,6 +665,48 @@ const router = createBrowserRouter([
                     ),
                   },
                 ],
+              },
+            ],
+          },
+          {
+            path: "post",
+            element: (
+              <ProtectedRoute requiredRole={["HR"]}>
+                <Home />
+              </ProtectedRoute>
+            ),
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <ListAllPost myPost={false} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "add",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <CreatePost />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "mypost",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <ListAllPost myPost={true} />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: "update/:postId",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <EditPost />
+                  </ProtectedRoute>
+                ),
               },
             ],
           },

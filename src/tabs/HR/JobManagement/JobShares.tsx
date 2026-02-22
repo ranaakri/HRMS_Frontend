@@ -86,7 +86,7 @@ export default function JobShares() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup className="bg-white text-black">
-                  <SelectItem value="UNDERPENDING">Pending</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
                   <SelectItem value="UNDER_REVIEW">Under Review</SelectItem>
                   <SelectItem value="SELECTED">Selected</SelectItem>
                   <SelectItem value="REJECTED">Rejected</SelectItem>

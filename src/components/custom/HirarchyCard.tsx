@@ -11,7 +11,7 @@ export interface Root {
 
 export default function HirarchyCard({ item, color }: { item: Root, color: string }) {
   return (
-    <div className="max-w-100 min-w-100">
+    <div className="max-w-50 min-w-50">
       <div className={`p-5 md:px-10 grid grid-cols-1 justify-items-center bg-gray-100 rounded-lg shadow-md border-t-6 border-${color}-500 gap-2`}>
         <img
           src={
@@ -23,10 +23,10 @@ export default function HirarchyCard({ item, color }: { item: Root, color: strin
           alt="no image"
           className="w-24 h-24 rounded-full object-cover"
         />
-        <p className="font-bold text-xl">{item.name}</p>
-        <p className="text-blue-600 font-semibold">{item.designation}</p>
+        <p className="font-bold">{item.name}</p>
+        <p className="text-blue-600 text-sm font-semibold">{item.designation}</p>
         <div className="font-mono border-t border-gray-300 pt-2 text-gray-500">
-          <p className="flex gap-2 items-center">
+          <p className="flex gap-2 items-center text-sm">
             <BiLogoGmail />
             {item.email}
           </p>
@@ -34,12 +34,4 @@ export default function HirarchyCard({ item, color }: { item: Root, color: strin
       </div>
     </div>
   );
-}
-
-function AssignedUnder() {
-  return (
-    <div className="">
-      
-    </div>
-  )
 }

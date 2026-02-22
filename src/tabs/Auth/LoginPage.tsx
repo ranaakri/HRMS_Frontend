@@ -18,6 +18,7 @@ export interface Data {
   userId: number;
   email: string;
   role: Role;
+  profileUrl: string;
   name: string;
 }
 

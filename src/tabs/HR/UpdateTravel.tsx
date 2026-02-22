@@ -106,7 +106,7 @@ export default function UpdateTravelDetails() {
     },
 
     onSuccess: () => {
-      notify.success("Success!!!", "Travel Details added successfully.");
+      notify.success("Success!!!", "Travel Details updated successfully.");
     },
 
     onError: (error) => {
@@ -154,7 +154,7 @@ export default function UpdateTravelDetails() {
 
   const handleImageUpload = async() => {
     if(!selectedFile){
-      alert("Please select an image")
+      notify.error("Error", "Please select the image")
       return
     }
 
@@ -245,7 +245,7 @@ export default function UpdateTravelDetails() {
               control={control}
               rules={{ required: "Status is required" }}
               render={({ field }) => (
-                <Select onValueChange={field.onChange}>
+                <Select onValueChange={field.onChange} defaultValue={data.status}>
                   <SelectTrigger className="bg-white text-black">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
@@ -318,13 +318,6 @@ export default function UpdateTravelDetails() {
             )}
           </div>
           <div className="flex gap-4 md:col-span-2">
-            <Button
-              type="button"
-              onClick={() => reset()}
-              className="bg-black text-white hover:bg-gray-300 cursor-pointer"
-            >
-              Reset
-            </Button>
             <Button
               type="submit"
               className="cursor-pointer"
