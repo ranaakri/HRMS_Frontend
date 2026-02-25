@@ -167,8 +167,7 @@ export default function PostBox({
           <img
             src={profile}
             alt="profile"
-            width="70"
-            className="rounded-full"
+            className="w-15 h-15 rounded-full object-cover"
           />
 
           <div>
@@ -219,12 +218,24 @@ export default function PostBox({
           <div className="text-xl font-bold mt-4">{post.title}</div>
 
           {post.postType === "I" && (
-            <div className="my-4">
-              <img src={post.imagePath} className="rounded-xl w-full" />
+            <div className="relative my-4 w-full max-h-125 flex items-center justify-center overflow-hidden rounded-xl">
+
+              <img
+                src={post.imagePath}
+                alt="blur-bg"
+                className="absolute inset-0 w-full h-full object-cover blur-xl scale-110 opacity-80"
+              />
+
+              <img
+                src={post.imagePath}
+                alt="post"
+                className="relative max-h-125 w-auto object-contain"
+              />
             </div>
           )}
 
           <div>{post.description}</div>
+          <div>{post.tags}</div>
         </div>
 
         <hr className="my-4 text-gray-300" />
@@ -247,7 +258,7 @@ export default function PostBox({
             onClick={() => onOpenComments(post.postId)}
           >
             <FaComment />
-            {post.commentCount}
+            {commentCounts}
           </div>
         </div>
       </div>

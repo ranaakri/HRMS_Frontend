@@ -17,7 +17,6 @@ import ListTravelPlans from "./tabs/HR/ListTravelPlans.tsx";
 import { Toaster } from "sonner";
 import UpdateTravelDetails from "./tabs/HR/UpdateTravel.tsx";
 import AddUserToTravel from "./components/custom/AddUserToTravel.tsx";
-import MyTravelPlans from "./tabs/HR/MyTravelPlans.tsx";
 import UploadTravelDocuments from "./components/custom/UploadTravelDocuments.tsx";
 import CreateJob from "./tabs/HR/JobManagement/CreateJob.tsx";
 import UpdateJob from "./tabs/HR/JobManagement/UpdateJob.tsx";
@@ -42,6 +41,10 @@ import Home from "./tabs/Post/Home.tsx";
 import ListAllPost from "./tabs/Post/ListAllPost.tsx";
 import CreatePost from "./tabs/Post/AddPost.tsx";
 import EditPost from "./tabs/Post/EditPost.tsx";
+import SearchByUsers from "./tabs/Post/SearchByUsers.tsx";
+import UpdateUserProfile from "./tabs/UpdateUserProfile.tsx";
+import UpdateProfile from "./components/custom/UpdateProfile.tsx";
+import MyTravelPlans from "./tabs/HR/MyTravelPlans.tsx";
 
 function DefaultLanding() {
   const { user } = useAuth();
@@ -77,6 +80,14 @@ const router = createBrowserRouter([
       {
         path: "employee",
         children: [
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute requiredRole={["Employee"]}>
+                <UpdateProfile />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "travel",
             children: [
@@ -207,6 +218,24 @@ const router = createBrowserRouter([
                   </ProtectedRoute>
                 ),
               },
+              {
+                path: "search",
+                element: (
+                  <ProtectedRoute requiredRole={["Employee"]}>
+                    <SearchByUsers />
+                  </ProtectedRoute>
+                ),
+                children: [
+                  {
+                    path: ":userId",
+                    element: (
+                      <ProtectedRoute requiredRole={["Employee"]}>
+                        <ListAllPost myPost={false} />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
+              },
             ],
           },
           {
@@ -240,7 +269,7 @@ const router = createBrowserRouter([
               {
                 path: "view/:jobId",
                 element: (
-                  <ProtectedRoute requiredRole={["HR"]}>
+                  <ProtectedRoute requiredRole={["Employee"]}>
                     <UpdateJob isViewOnly={true} />
                   </ProtectedRoute>
                 ),
@@ -252,6 +281,14 @@ const router = createBrowserRouter([
       {
         path: "manager",
         children: [
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute requiredRole={["Manager"]}>
+                <UpdateProfile />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "travel",
             children: [
@@ -274,6 +311,53 @@ const router = createBrowserRouter([
                       </ProtectedRoute>
                     ),
                   },
+                  {
+                    path: "upload-documents/:travelId",
+                    element: (
+                      <ProtectedRoute requiredRole={["Manager"]}>
+                        <UploadTravelingDocsEmp />
+                      </ProtectedRoute>
+                    ),
+                  },
+                  {
+                    path: "my-travel-plans",
+
+                    children: [
+                      {
+                        index: true,
+                        element: (
+                          <ProtectedRoute
+                            requiredRole={["HR", "Employee", "Manager"]}
+                          >
+                            <MyTravelPlans />
+                          </ProtectedRoute>
+                        ),
+                      },
+                      {
+                        path: "expense/:travelId",
+
+                        children: [
+                          {
+                            index: true,
+                            element: (
+                              <ProtectedRoute requiredRole={["Manager"]}>
+                                <ExpenseList isForApproval={false} />
+                              </ProtectedRoute>
+                            ),
+                          },
+                          {
+                            path: "add",
+                            element: (
+                              <ProtectedRoute requiredRole={["Manager"]}>
+                                <AddExpense />
+                              </ProtectedRoute>
+                            ),
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                  
                 ],
               },
             ],
@@ -406,6 +490,24 @@ const router = createBrowserRouter([
                   </ProtectedRoute>
                 ),
               },
+              {
+                path: "search",
+                element: (
+                  <ProtectedRoute requiredRole={["Manager"]}>
+                    <SearchByUsers />
+                  </ProtectedRoute>
+                ),
+                children: [
+                  {
+                    path: ":userId",
+                    element: (
+                      <ProtectedRoute requiredRole={["Manager"]}>
+                        <ListAllPost myPost={false} />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
+              },
             ],
           },
         ],
@@ -413,6 +515,14 @@ const router = createBrowserRouter([
       {
         path: "hr",
         children: [
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute requiredRole={["HR"]}>
+                <UpdateProfile />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: "job",
             children: [
@@ -707,6 +817,24 @@ const router = createBrowserRouter([
                     <EditPost />
                   </ProtectedRoute>
                 ),
+              },
+              {
+                path: "search",
+                element: (
+                  <ProtectedRoute requiredRole={["HR"]}>
+                    <SearchByUsers />
+                  </ProtectedRoute>
+                ),
+                children: [
+                  {
+                    path: ":userId",
+                    element: (
+                      <ProtectedRoute requiredRole={["HR"]}>
+                        <ListAllPost myPost={false} />
+                      </ProtectedRoute>
+                    ),
+                  },
+                ],
               },
             ],
           },

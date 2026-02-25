@@ -10,7 +10,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { addDays, format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import {
   Select,
@@ -65,32 +65,28 @@ export default function UpdateTravelDetails() {
 
   const navigate = useNavigate();
 
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 5),
   });
-
-  const [uploaded, setUploaded] = useState<TravelGallery[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [images, setImages] = useState<TravelGallery[]>([]);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["travelDetails"],
+    queryKey: ["travelDetails", travelId],
     queryFn: () =>
       axios
         .get(server_url + `/travel/${travelId}`, { withCredentials: true })
         .then((res) => res.data.data),
+    enabled: !!travelId,
   });
-
-  //   console.log(data);
 
   const {
     register,
     handleSubmit,
     control,
     formState: { errors },
-    reset,
   } = useForm<ITravelDetails>({
     values: data,
   });
@@ -109,11 +105,35 @@ export default function UpdateTravelDetails() {
       notify.success("Success!!!", "Travel Details updated successfully.");
     },
 
-    onError: (error) => {
-      notify.error("Faild to add travel details", error.message);
-      console.log(error.cause);
+    onError: (error: any) => {
+      notify.error("Faild to add travel details", error.response.data.message);
+      console.error(error.response);
     },
   });
+
+  const imageUpload = useMutation({
+    mutationFn: async (formData: FormData) =>
+      await api
+        .post(`travel/gallery/${travelId}`, formData, { withCredentials: true })
+        .then((res) => res.data),
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+    },
+  });
+
+  useEffect(() => {
+    if (data?.travelGallery) {
+      setImages(data.travelGallery);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (imageUpload.isSuccess && imageUpload.data) {
+      setImages((prev) => [...prev, imageUpload.data]);
+      notify.success("Image uploaded successfully");
+    }
+  }, [imageUpload.data, imageUpload.isSuccess]);
 
   const onSubmit = async (data: IAddTravelDetails) => {
     const finalData = {
@@ -127,7 +147,7 @@ export default function UpdateTravelDetails() {
       updatedBy: user?.userId,
     };
 
-    console.log(mutation.mutateAsync(finalData));
+    mutation.mutateAsync(finalData);
   };
 
   const handleDelete = async () => {
@@ -141,41 +161,28 @@ export default function UpdateTravelDetails() {
         navigate("/hr/travel", { replace: true });
       }
     } catch (err: any) {
-      console.log(err);
-      notify.error("Error", err.message);
+      console.error(err);
+      notify.error("Error", err.error.response);
     }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if(e.target.files && e.target.files.length > 0){
+    if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
     }
-  }
+  };
 
-  const handleImageUpload = async() => {
-    if(!selectedFile){
-      notify.error("Error", "Please select the image")
-      return
+  const handleImageUpload = async () => {
+    if (!selectedFile) {
+      notify.error("Error", "Please select the image");
+      return;
     }
-
-    setLoading(true);
 
     const formData = new FormData();
-    formData.append('files', selectedFile);
+    formData.append("files", selectedFile);
 
-    try{
-      const response = await api.post(`travel/gallery/${travelId}`, formData, {withCredentials: true}).then(res => res.data);
-      setUploaded([...uploaded, response])
-      notify.success("Image uploaded successfully")
-    }catch(error: any){
-      notify.error("Error", error.message);
-      console.log("Error in uploading image", error)
-    }
-    finally{
-      setLoading(false);
-    }
-    
-  }
+    await imageUpload.mutateAsync(formData);
+  };
 
   if (isLoading) return <div className="">Loading...</div>;
 
@@ -184,11 +191,7 @@ export default function UpdateTravelDetails() {
 
   return (
     <div className="min-h-full">
-      <Button
-        variant="outline"
-        className="m-4"
-        onClick={handleDelete}
-      >
+      <Button variant="outline" className="m-4" onClick={handleDelete}>
         Delete Travel plan
       </Button>
       <Card className="m-4 p-5 md:p-10 mb-5 bg-white border-0">
@@ -245,7 +248,10 @@ export default function UpdateTravelDetails() {
               control={control}
               rules={{ required: "Status is required" }}
               render={({ field }) => (
-                <Select onValueChange={field.onChange} defaultValue={data.status}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={data.status}
+                >
                   <SelectTrigger className="bg-white text-black">
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
@@ -336,21 +342,30 @@ export default function UpdateTravelDetails() {
 
         <div className="p-5">
           <div className="flex gap-4">
-            <Input type="file" onChange={handleFileChange}/>
-            <Button className="bg-black text-white" onClick={handleImageUpload} disabled={loading}>Upload</Button>
+            <Input type="file" onChange={handleFileChange} />
+            <Button
+              className="bg-black text-white"
+              onClick={handleImageUpload}
+              disabled={imageUpload.isPending}
+            >
+              Upload
+            </Button>
           </div>
         </div>
-        {data?.travelGallery.length > 0 ? (
+        {images.length > 0 ? (
           <div className="grid grid-cols-1">
             <div className="grid grid-cols-1 md:grid-cols-3 p-4">
-              {data?.travelGallery.map((item: TravelGallery) => (
-                <ImageContainer imageData={item} key={item.imageId} />
+              {images.map((item: TravelGallery) => (
+                <ImageContainer
+                  imageData={item}
+                  key={item.imageId}
+                  onRemove={() =>
+                    setImages((prev) =>
+                      prev.filter((img) => img.imageId !== item.imageId),
+                    )
+                  }
+                />
               ))}
-              {
-                uploaded.map((item: TravelGallery) => (
-                  <ImageContainer imageData={item} key={item.imageId} />
-                ))
-              }
             </div>
           </div>
         ) : (

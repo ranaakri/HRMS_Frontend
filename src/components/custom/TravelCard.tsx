@@ -13,7 +13,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useEffect } from "react";
 import { notify } from "./Notification";
 
-export interface Root {
+export interface TravelPlanResponse {
   title: string;
   startDate: string;
   endDate: string;
@@ -50,11 +50,12 @@ const formatDate = (isoString: string) => {
 export default function TravelCard({
   details,
   expense,
+  myTarvelPlan,
 }: {
-  details: Root;
+  details: TravelPlanResponse;
   expense: boolean;
+  myTarvelPlan: boolean;
 }) {
-
   const { user } = useAuth();
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export default function TravelCard({
   }, []);
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg bg-white text-black group transition-all hover:shadow-xl max-w-4xl mx-auto m-4 border-gray-500">
+    <Card className="overflow-hidden border-0 shadow-lg bg-white text-black m-4 group transition-all hover:shadow-xl max-w-4xl mx-4 border-gray-500">
       <div className="flex flex-col md:flex-row">
         <div className="md:w-2/5 relative m-4 rounded-md flex items-center">
           {details.travelGallery.length > 0 ? (
@@ -145,19 +146,19 @@ export default function TravelCard({
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <Link
                   className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`manage/update/${details.travelId}`}
+                  to={`${myTarvelPlan ? "../../" : ""}manage/update/${details.travelId}`}
                 >
                   Update
                 </Link>
                 <Link
                   className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`manage/add-traveler/${details.travelId}`}
+                  to={`${myTarvelPlan ? "../../" : ""}manage/add-traveler/${details.travelId}`}
                 >
                   Traveling Persons
                 </Link>
                 <Link
                   className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`manage/upload-documents/${details.travelId}`}
+                  to={`${myTarvelPlan ? "../../" : ""}manage/upload-documents/${details.travelId}`}
                 >
                   Upload Documents
                 </Link>
@@ -195,14 +196,32 @@ export default function TravelCard({
                 </Link>
               </div>
             )}
-             {user?.role === "Manager" && (
+            {user?.role === "Manager" && (
               <div className="grid grid-cols-3 gap-4 text-sm">
-                <Link
-                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`manage/traveling-users/${details.travelId}`}
-                >
-                  Traveling Users
-                </Link>
+                {!expense && (
+                  <Link
+                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    to={`/manager/travel/manage/traveling-users/${details.travelId}`}
+                  >
+                    Traveling Users
+                  </Link>
+                )}
+                {expense && (
+                  <Link
+                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    to={`../upload-documents/${details.travelId}`}
+                  >
+                    Upload Document
+                  </Link>
+                )}
+                {expense && (
+                  <Link
+                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    to={`expense/${details.travelId}`}
+                  >
+                    Manage Expense
+                  </Link>
+                )}
               </div>
             )}
           </div>

@@ -96,6 +96,7 @@ export default function ExpenseList({
           `/travel/traveling-user/travelId/${travelId}/userId/${user?.userId}`,
         )
         .then((res) => res.data),
+      enabled: !isForApproval && !!user?.userId
   });
 
   useEffect(() => {
@@ -105,11 +106,12 @@ export default function ExpenseList({
   }, []);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["allExpenses"],
+    queryKey: ["allExpenses", isForApproval, user?.userId , travelId],
     queryFn: () =>
       api
-        .get<IExpenseListRes[]>(`/travel/expense/${travelId}`)
+        .get<IExpenseListRes[]>(isForApproval ? `/travel/expense/${travelId}` : `/travel/expense/user/${user?.userId}/travel/${travelId}`)
         .then((res) => res.data),
+    enabled: !!user?.userId && !!travelId
   });
 
   useEffect(() => {
@@ -148,8 +150,8 @@ export default function ExpenseList({
       return;
     },
     onError: (error: any) => {
-      notify.error("Error", error.message);
-      console.error(error.cause);
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
       setRemarks("");
       return;
     },
@@ -164,8 +166,8 @@ export default function ExpenseList({
       setExpenseList(expenseList.filter((val) => val.expenseId != id));
     },
     onError: (error: any) => {
-      notify.error("Error", error.message);
-      console.error(error.cause);
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
     },
   });
 
@@ -252,7 +254,7 @@ export default function ExpenseList({
                   <p className="text-sm font-mono">
                     Expense ID: {item.expenseId}
                   </p>
-                  {isForApproval && (
+                  {/* {isForApproval && (
                     <Button
                       variant={"destructive"}
                       className="bg-red-300 border-red-600 border justify-self-end"
@@ -261,7 +263,7 @@ export default function ExpenseList({
                     >
                       Delete
                     </Button>
-                  )}
+                  )} */}
                 </div>
                 <p className="font-semibold text-gray-800">
                   Spent Amount: {item.amount}

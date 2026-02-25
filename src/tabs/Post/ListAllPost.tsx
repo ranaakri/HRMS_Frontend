@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useLocation, useParams } from "react-router-dom";
 
 interface WarnDeleteDialogProps {
   open: boolean;
@@ -25,8 +26,16 @@ interface WarnDeleteDialogProps {
   onDeleted: (postId: number) => void;
 }
 
-export default function ListAllPost({ myPost, deletedPost}: { myPost: boolean, deletedPost?: boolean }) {
+export default function ListAllPost({
+  myPost,
+  deletedPost,
+}: {
+  myPost: boolean;
+  deletedPost?: boolean;
+}) {
   const { user } = useAuth();
+  const { userId } = useParams();
+  const location = useLocation();
 
   const [page, setPage] = useState(0);
   const [postData, setPostData] = useState<PostResponse[]>([]);
@@ -39,19 +48,28 @@ export default function ListAllPost({ myPost, deletedPost}: { myPost: boolean, d
   const [openWarningDialog, setOpenWarningDialog] = useState(false);
   const [warningPostId, setWarningPostId] = useState<number | null>(null);
 
-  const observer = useRef<IntersectionObserver | null>(null);
+  const observer = useRef<IntersectionObserver | null>(null); 
 
   const loadPost = useQuery({
-    queryKey: [myPost ? "loadMyPost" : "loadFilteredPost", page, user?.userId],
+    queryKey: [
+      myPost ? "loadMyPost" : "loadFilteredPost",
+      page,
+      user?.userId,
+      userId,
+      location.pathname
+    ],
     queryFn: () =>
       api
         .get(
-          deletedPost ? `/api/post/warning/hr/{userId}?page=${page}` :
-          myPost
-            ? `/post/my/${user?.userId}?page=${page}`
-            : user?.role === "HR"
-              ? `/post/${user?.userId}?page=${page}`
-              : `/post/filtered/${user?.userId}?page=${page}`,
+          userId
+            ? `/post/my/${userId}?page=${page}`
+            : deletedPost
+              ? `/api/post/warning/hr/{userId}?page=${page}`
+              : myPost
+                ? `/post/my/${user?.userId}?page=${page}`
+                : user?.role === "HR"
+                  ? `/post/${user?.userId}?page=${page}`
+                  : `/post/filtered/${user?.userId}?page=${page}`,
         )
         .then((res) => res.data),
     enabled: !!user?.userId,
@@ -62,6 +80,12 @@ export default function ListAllPost({ myPost, deletedPost}: { myPost: boolean, d
     setPostData([]);
     setHasMore(true);
   }, [myPost]);
+
+  useEffect(() => {
+    setPage(0);
+    setPostData([]);
+    setHasMore(true);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (loadPost.data) {
@@ -177,7 +201,6 @@ export default function ListAllPost({ myPost, deletedPost}: { myPost: boolean, d
     </div>
   );
 }
-
 
 function WarnDeleteDialog({
   open,

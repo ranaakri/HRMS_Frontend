@@ -16,6 +16,7 @@ import {
 } from "../ui/select";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Badge } from "../ui/badge";
+import { useConfirm } from "@/hooks/usecontirm";
 
 export interface DocumentInfo {
   docId: number;
@@ -42,8 +43,10 @@ function UploadedFiles({
 }) {
   const options = { timeZone: "Asia/Kolkata" };
   const { user } = useAuth();
+  const {confirm, ConfirmComponent} = useConfirm();
 
   const deleteDoc = useMutation({
+
     mutationFn: async (docId: number) => {
       return await api.delete(RouteList.uploadTravelingDocs + "/" + docId, {
         withCredentials: true,
@@ -54,14 +57,14 @@ function UploadedFiles({
       return;
     },
     onError: (error: any) => {
-      notify.error("Error", error.message);
+      notify.error("Error", error.response.data.message);
       console.error(error.response);
       return;
     },
   });
 
   const handleDeleteDoc = async (docId: number) => {
-    const res = confirm("Are you sure you want to delete document");
+    const res = await confirm("Are you sure you want to delete document");
 
     if (!res) return;
 
@@ -69,8 +72,8 @@ function UploadedFiles({
       await deleteDoc.mutateAsync(docId);
       setUploadedDocs(uploadedDocs.filter((res) => res.docId != docId));
     } catch (error: any) {
-      console.error(error.message);
-      notify.error("Error", error.message);
+      console.error(error.response);
+      notify.error("Error", error.response.data.message);
     }
   };
 
@@ -107,6 +110,7 @@ function UploadedFiles({
             </div>
           </div>
         ))}
+        {ConfirmComponent}
     </div>
   );
 }
@@ -162,8 +166,8 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
       // setUploaded([...uploaded, response])
       notify.success("Image uploaded successfully");
     } catch (error: any) {
-      notify.error("Error", error.message);
-      console.log("Error in uploading image", error);
+      notify.error("Error", error.response.data.message);
+      console.log("Error in uploading image", error.response);
     }
   };
 

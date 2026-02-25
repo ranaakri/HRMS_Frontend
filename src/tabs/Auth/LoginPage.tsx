@@ -1,10 +1,8 @@
 import { BsClipboard2Check } from "react-icons/bs";
 import { FaLockOpen } from "react-icons/fa";
-import { useAuth, type Role } from "@/context/AuthContext";
+import { getCookie, useAuth, type Role } from "@/context/AuthContext";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import type { IResponse } from "@/interface/IResponse";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/api/api";
 import { notify } from "@/components/custom/Notification";
@@ -26,6 +24,12 @@ export default function LoginPage() {
   const { setLoggedin, setUser } = useAuth();
   const navigate = useNavigate();
 
+  if (getCookie("LoggedIn")) {
+    navigate("/", { replace: true });
+    setLoggedin(true);
+    return;
+  }
+
   const {
     register,
     handleSubmit,
@@ -34,9 +38,7 @@ export default function LoginPage() {
 
   const login = useMutation({
     mutationFn: async (data: IForm) => {
-      return await api
-        .post<Data>("http://localhost:8081/auth/login", data)
-        .then((res) => res.data);
+      return await api.post<Data>("/auth/login", data).then((res) => res.data);
     },
     onSuccess: () => {
       notify.success("Login Success", "You have logged in successfully");
@@ -56,8 +58,7 @@ export default function LoginPage() {
     };
     const res = await login.mutateAsync(payload);
     localStorage.setItem("user", JSON.stringify(res));
-    if(res)
-      setUser(res);
+    if (res) setUser(res);
     setLoggedin(true);
     navigate("/", { replace: true });
   };
@@ -135,7 +136,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={login.isPending?true:false}
+              disabled={login.isPending ? true : false}
               className="p-2 mb-4 border bg-blue-300 text-white rounded-full hover:bg-blue-500 duration-200 m-2 cursor-pointer"
             >
               Sign in

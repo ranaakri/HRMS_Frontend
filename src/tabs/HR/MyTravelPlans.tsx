@@ -1,67 +1,84 @@
 import api from "@/api/api";
-import { notify } from "@/components/custom/Notification";
-import TravelCard from "@/components/custom/TravelCard";
+import TravelCard, { type TravelPlanResponse } from "@/components/custom/TravelCard";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function MyTravelPlans() {
   const { user } = useAuth();
-
-  useEffect(() => {
-    if (!user) {
-      notify.error("Logged out", "Please login again");
-      return;
-    }
-  }, []);
-
   const navigate = useNavigate();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["list"],
-    queryFn: () =>
-      api
-        .get("/travel/traveling-user/user/" + user?.userId, {
-          withCredentials: true,
-        })
-        .then((res) => res.data.data),
+  const [search, setSearch] = useState("");
+
+  const { data: travelPlans = [] , isLoading, error } = useQuery<TravelPlanResponse[]>({
+    queryKey: ["list", user?.userId],
+    enabled: !!user?.userId,
+    queryFn: () => api
+      .get(`/travel/traveling-user/user/${user?.userId}`, { withCredentials: true })
+      .then((res) => res.data.data),
   });
 
-  if (isLoading) return <div className="">Loading...</div>;
+  const filteredList = useMemo(() => {
+      if (search.trim().length < 2) return travelPlans;
+      
+      return travelPlans.filter((plan) =>
+        plan.title.toLowerCase().includes(search.toLowerCase())
+      );
+    }, [search, travelPlans]);
 
-  if (error) return <div className="">Error: {error.message}</div>;
+  if (isLoading) return <div className="p-8 text-center">Loading...</div>;
+  if (error) return <div className="p-8 text-red-500">Error: {error.message}</div>;
 
   return (
-    <div className="">
+    <div className="container mx-auto p-4">
       {user?.role === "HR" && (
-        <div className="">
-          <Button
-            variant={"outline"}
-            className="m-4 cursor-pointer"
-            onClick={() => navigate("/hr/travel/manage/add")}
-          >
+        <div className="ml-4 mb-6 flex gap-4">
+          <Button variant="outline" onClick={() => navigate("/hr/travel/manage/add")}>
             Add New Travel Plan
           </Button>
-          <Button
-            variant={"outline"}
-            className="m-4 cursor-pointer"
-            onClick={() => navigate("/hr/travel")}
-          >
-            All
+          <Button variant="outline" onClick={() => navigate("/hr/travel")}>
+            View All Plans
           </Button>
         </div>
       )}
-      {data.length > 0 ? (
-        data.map((item: any, index: number) => (
-          <TravelCard details={item} key={index} expense={true} />
-        ))
-      ) : (
-        <div className="flex items-center justify-center text-gray-900">
-          No Travel plans
+
+      {user?.role === "Manager" && (
+        <div className="ml-4 mb-6 flex gap-4">
+          <Button variant="outline" onClick={() => navigate("../../../travel")}>
+            View All Plans
+          </Button>
         </div>
       )}
+
+      <div className="ml-4 mb-8 max-w-xl">
+        <Input 
+          type="text" 
+          className="bg-white" 
+          placeholder="Search by title..." 
+          value={search}
+          onChange={(e) => setSearch(e.target.value)} 
+        />
+      </div>
+
+      <div className="grid gap-4">
+        {filteredList?.length > 0 ? (
+          filteredList.map((item: any) => (
+            <TravelCard 
+              key={item.id + "_list"}
+              myTarvelPlan={true} 
+              details={item} 
+              expense={true} 
+            />
+          ))
+        ) : (
+          <div className="py-10 text-center text-gray-500">
+            No travel plans found.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

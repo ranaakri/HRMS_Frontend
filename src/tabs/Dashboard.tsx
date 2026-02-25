@@ -41,32 +41,39 @@ interface Notification {
 }
 
 const EmployeeItems: MenuItem[] = [
-  { name: "Archivements", path: "employee/post", icon: TbBrandInstagramFilled },
+  { name: "Achivements", path: "employee/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "employee/game", icon: FaGamepad },
   { name: "Travel Plans", path: "employee/travel", icon: Briefcase },
   { name: "Job Sharing", path: "employee/job", icon: ClipboardList },
-  { name: "Organization", path: "employee/org-chart", icon: RiOrganizationChart },
-  // { name: "Settings", path: "employee/org-chart", icon: Settings },
+  {
+    name: "Organization",
+    path: "employee/org-chart",
+    icon: RiOrganizationChart,
+  },
+  { name: "Settings", path: "employee/profile", icon: Settings },
 ];
 
 const ManagerItems: MenuItem[] = [
-  { name: "Archivements", path: "manager/post", icon: TbBrandInstagramFilled },
+  { name: "Achivements", path: "manager/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "manager/game", icon: FaGamepad },
   { name: "Travel Plans", path: "manager/travel", icon: Briefcase },
   { name: "Job Sharing", path: "manager/job", icon: ClipboardList },
-  { name: "Organization", path: "manager/org-chart", icon: RiOrganizationChart },
-  // { name: "Settings", path: "resetpassword", icon: Settings },
+  {
+    name: "Organization",
+    path: "manager/org-chart",
+    icon: RiOrganizationChart,
+  },
+  { name: "Settings", path: "manager/profile", icon: Settings },
 ];
 
 const HRItems: MenuItem[] = [
-  { name: "Archivements", path: "hr/post", icon: TbBrandInstagramFilled },
+  { name: "Achivements", path: "hr/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "hr/game", icon: FaGamepad },
   { name: "Travel Management", path: "hr/travel", icon: Briefcase },
   { name: "Job Management", path: "hr/job", icon: ClipboardList },
   { name: "Organization", path: "hr/org-chart", icon: RiOrganizationChart },
-  // { name: "Settings", path: "resetpassword", icon: Settings },
+  { name: "Settings", path: "hr/profile", icon: Settings },
 ];
-
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -98,7 +105,6 @@ export default function Dashboard() {
     }
   }, [user]);
 
-
   const getNotification = useQuery({
     queryKey: ["Notification", user?.userId],
     queryFn: () =>
@@ -119,7 +125,7 @@ export default function Dashboard() {
       api.patch(`/notification/${receiverId}`).then((res) => res.data),
     onSuccess: () => notify.success("Marked", "Notification marked as read"),
     onError: (error: any) =>
-      notify.error("Error", error?.message || "Something went wrong"),
+      notify.error("Error", error.response.data.message || "Something went wrong"),
   });
 
   const handleMarkRead = async (receiverId: number) => {
@@ -128,7 +134,6 @@ export default function Dashboard() {
       prev.filter((val) => val.receiverId !== receiverId),
     );
   };
-
 
   const handleNavClick = (path: string) => {
     navigate(path);
@@ -139,14 +144,12 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden">
-
       <aside
         className={`fixed inset-y-0 left-0 z-40 w-64 bg-linear-to-t from-sky-500 to-black shadow-lg transition-transform duration-300
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:static`}
       >
         <div className="flex flex-col h-full p-4 text-white">
-
           <div className="flex flex-col items-center gap-3 p-4 bg-gray-800 rounded-xl shadow-md">
             <img
               src={
@@ -189,7 +192,6 @@ export default function Dashboard() {
       )}
 
       <div className="flex-1 flex flex-col">
-
         <header className="flex items-center justify-between h-16 px-6 bg-black shadow-md">
           <div className="flex items-center gap-4">
             <Button
@@ -204,7 +206,6 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
-
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="relative">
@@ -219,45 +220,43 @@ export default function Dashboard() {
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className="max-h-96 overflow-y-auto bg-white">
+              <DialogContent className=" bg-white">
                 <DialogHeader>
-                  <DialogTitle>
-                    Notifications
-                  </DialogTitle>
-                  <DialogDescription>
-                    Unread notifications
-                  </DialogDescription>
+                  <DialogTitle>Notifications</DialogTitle>
+                  <DialogDescription>Unread notifications</DialogDescription>
                 </DialogHeader>
 
-                {notifications.length > 0 ? (
-                  notifications.map((item) => (
-                    <div
-                      key={item.receiverId}
-                      className="border p-3 rounded-md my-2 flex justify-between"
-                    >
-                      <div>
-                        <p className="text-xs text-gray-500">
-                          {new Date(item.time).toLocaleDateString(
-                            undefined,
-                            DateOptions,
-                          )}
-                        </p>
-                        <p className="font-semibold">{item.title}</p>
-                        <p>{item.description}</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkRead(item.receiverId)}
+                <div className="max-h-96 overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((item) => (
+                      <div
+                        key={item.receiverId}
+                        className="border p-3 rounded-md my-2 flex justify-between"
                       >
-                        Mark Read
-                      </Button>
+                        <div>
+                          <p className="text-xs text-gray-500">
+                            {new Date(item.time).toLocaleDateString(
+                              undefined,
+                              DateOptions,
+                            )}
+                          </p>
+                          <p className="font-semibold">{item.title}</p>
+                          <p>{item.description}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleMarkRead(item.receiverId)}
+                        >
+                          Mark Read
+                        </Button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center text-gray-500">
+                      No Notifications
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center text-gray-500">
-                    No Notifications
-                  </div>
-                )}
+                  )}
+                </div>
 
                 <DialogFooter>
                   <DialogClose asChild>
@@ -281,7 +280,6 @@ export default function Dashboard() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-gray-100">
           <Outlet />
         </main>
-
       </div>
     </div>
   );

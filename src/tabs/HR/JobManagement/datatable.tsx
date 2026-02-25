@@ -23,6 +23,7 @@ import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { IoMdAdd } from "react-icons/io";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -77,7 +78,7 @@ export function DataTable<TData, TValue>({
             className="bg-black text-white"
             onClick={() => navigate(addButtonNav)}
           >
-            Add new job
+            <IoMdAdd />Add new job
           </Button>
         )}
       </div>

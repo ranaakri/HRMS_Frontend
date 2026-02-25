@@ -152,106 +152,126 @@ export default function CreatePost() {
   };
 
   return (
-    <Card className="p-5 md:p-10 bg-white border-0 shadow-md">
-      <h2 className="text-2xl font-bold text-gray-500 bg-white">
+  <div className="flex justify-center bg-gray-50 py-10">
+    <Card className="w-full max-w-2xl p-6 md:p-8 bg-white shadow-lg rounded-2xl border">
+      
+      <h2 className="text-2xl font-semibold mb-6 text-gray-800">
         Create Post
       </h2>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
-        <div className="m-2">
-          <label>Title</label>
+        <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
+          <button
+            type="button"
+            onClick={() => setPostType("Text")}
+            className={`px-4 py-1.5 rounded-md text-sm transition ${
+              postType === "Text"
+                ? "bg-white shadow text-black"
+                : "text-gray-500"
+            }`}
+          >
+            Text
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPostType("Image")}
+            className={`px-4 py-1.5 rounded-md text-sm transition ${
+              postType === "Image"
+                ? "bg-white shadow text-black"
+                : "text-gray-500"
+            }`}
+          >
+            Image
+          </button>
+        </div>
+
+        <div>
           <Input
-            type="text"
+            placeholder="Write a title..."
+            className="border-0 border-b rounded-none focus-visible:ring-0 text-lg"
             {...register("title", { required: "Title is required" })}
           />
           {errors.title && (
-            <p className="text-red-500 text-sm">
+            <p className="text-red-500 text-sm mt-1">
               {errors.title.message}
             </p>
           )}
         </div>
 
-        <div className="m-2">
-          <label>Description</label>
-          <Textarea {...register("description")} />
+        <div>
+          <Textarea
+            placeholder="Write your caption..."
+            className="resize-none min-h-25 border rounded-xl"
+            {...register("description")}
+          />
         </div>
 
-        <div className="m-2">
-          <label>Tags</label>
-          <Input type="text" {...register("tags")} />
-        </div>
-
-        
-
-        <div className="m-2 flex gap-4 items-center">
-          <p>Visible to:</p>
-
-          <div>
-            <input
-              type="checkbox"
-              id="emp"
-              checked={emp}
-              onChange={() => setEmp(!emp)}
-            />
-            <label htmlFor="emp" className="ml-1">
-              Employee
-            </label>
-          </div>
-
-          <div>
-            <input
-              type="checkbox"
-              id="manager"
-              checked={manager}
-              onChange={() => setManager(!manager)}
-            />
-            <label htmlFor="manager" className="ml-1">
-              Manager
-            </label>
-          </div>
-        </div>
-        <div className="m-2">
-          <Button
-            className="text-white bg-black mt-2"
-            type="button"
-            onClick={() =>
-              setPostType(postType === "Image" ? "Text" : "Image")
-            }
-          >
-            {postType === "Image" ? "Switch to Text" : "Switch to Image"}
-          </Button>
-        </div>
+        <Input
+          placeholder="Add tags (e.g. travel, work, tech)"
+          className="rounded-xl"
+          {...register("tags")}
+        />
 
         {postType === "Image" && (
-          <div className="m-2">
-            <label>Image</label>
+          <div className="space-y-4">
+            <label className="block text-sm text-gray-500">
+              Upload Image
+            </label>
+
             <Input type="file" onChange={handleFileChange} />
 
             {previewUrl && (
-              <div className="mt-4">
+              <div className="rounded-xl overflow-hidden border bg-gray-100">
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="rounded-xl max-h-80 object-contain border"
+                  className="w-full max-h-100 object-contain"
                 />
               </div>
             )}
           </div>
         )}
 
-        <div className="m-2">
-          <Button
-            type="submit"
-            className="bg-black text-white"
-            disabled={addImage.isPending || uploadPost.isPending}
-          >
-            {addImage.isPending || uploadPost.isPending
-              ? "Posting..."
-              : "Post"}
-          </Button>
+        {/* Visibility */}
+        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border">
+          <span className="text-sm font-medium text-gray-700">
+            Visible To
+          </span>
+
+          <div className="flex gap-6 text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={emp}
+                onChange={() => setEmp(!emp)}
+              />
+              Employee
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={manager}
+                onChange={() => setManager(!manager)}
+              />
+              Manager
+            </label>
+          </div>
         </div>
+
+        <Button
+          type="submit"
+          disabled={addImage.isPending || uploadPost.isPending}
+          className="w-full bg-black text-white rounded-xl h-11 text-sm font-medium hover:opacity-90 transition"
+        >
+          {addImage.isPending || uploadPost.isPending
+            ? "Posting..."
+            : "Share Post"}
+        </Button>
       </form>
     </Card>
-  );
+  </div>
+);
 }

@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { notify } from "@/components/custom/Notification";
 import { useParams } from "react-router-dom";
+import { useConfirm } from "@/hooks/usecontirm";
 
 export interface DocumentInfo {
   docId: number;
@@ -35,6 +36,7 @@ export interface UploadedBy {
 
 function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
   const options = { timeZone: "Asia/Kolkata" }
+  const {confirm, ConfirmComponent} = useConfirm()
 
   const [docList, setDocList] = useState<DocumentInfo[]>([]);
 
@@ -43,7 +45,7 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
   }, [uploadedDocs]);
 
   const handleDeleteDoc = async (docId: number) => {
-    const res = confirm("Are you sure you want to delete document");
+    const res = await confirm("Are you sure you want to delete document");
 
     if (!res) return;
 
@@ -54,8 +56,8 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
       setDocList(docList.filter((res) => res.docId != docId));
       notify.success("Documnet deleted successfully");
     } catch (error: any) {
-      console.error(error.message);
-      notify.error("Error", error.message);
+      console.error(error.response.data.message);
+      notify.error("Error", error.response);
     }
   };
 
@@ -87,6 +89,7 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
             </Button>
           </div>
         ))}
+        {ConfirmComponent}
     </div>
   );
 }
@@ -145,15 +148,15 @@ export default function UploadTravelingDocsEmp() {
       // setUploaded([...uploaded, response])
       notify.success("Image uploaded successfully");
     } catch (error: any) {
-      notify.error("Error", error.message);
-      console.log("Error in uploading image", error);
+      notify.error("Error", error.response.data.message);
+      console.error("Error in uploading image", error.response);
     }
   };
 
   return (
     <div className="p-4 rounded-md bg-white shadow-md border-0 m-2">
       <p className="font-semibold text-black mb-2">My Documents</p>
-      {!(user?.role === "Manager") && (
+      {user?.role === "Manager" && (
         <div className="flex gap-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input

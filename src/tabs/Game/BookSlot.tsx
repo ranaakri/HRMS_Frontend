@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/api/api";
 import { useDebounce } from "@/hook/DebounceHoot";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { notify } from "@/components/custom/Notification";
 import type { IUserList } from "@/components/custom/AddUserToTravel";
 import { Input } from "@/components/ui/input";
@@ -50,7 +50,7 @@ export default function BookSlot() {
 
   const { user } = useAuth();
 
-  
+  const [listbool, updateBookingList] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["game", gameId],
@@ -67,7 +67,7 @@ export default function BookSlot() {
   const slotInfo: SlotInfo | undefined = slotData.data;
 
   const checkBooking = useQuery({
-    queryKey: ["checkhasBooking", user?.userId, slotId],
+    queryKey: ["checkhasBooking", user?.userId, slotId, listbool],
     queryFn: async () =>
       await api
         .get(`/game-bookings/check-booking/user/${user?.userId}/slot/${slotId}`)
@@ -78,7 +78,7 @@ export default function BookSlot() {
   const hasBooking = checkBooking.data;
 
   const getStatus = useQuery({
-    queryKey: ["checkhasBooking", user?.userId, slotId, hasBooking],
+    queryKey: ["checkhasBooking", user?.userId, slotId, hasBooking, listbool],
     queryFn: async () => {
       return await api
         .get(`/game-bookings/get/user/${user?.userId}/slot/${slotId}`)
@@ -88,7 +88,7 @@ export default function BookSlot() {
   });
 
   const bookingList = useQuery({
-    queryKey: ["bookingList", slotId],
+    queryKey: ["bookingList", slotId, listbool],
     queryFn: async () => {
       return await api.get(`/game-bookings/${slotId}`).then((res) => res.data);
     },
@@ -160,8 +160,8 @@ export default function BookSlot() {
                 <span className="font-bold">
                   Your Booking Status: {getStatus.data || "PENDING"}
                 </span>
-
-                {slotInfo.startTime &&
+                {getStatus.data !== "DELETED" &&
+                  slotInfo.startTime &&
                   new Date() < new Date(slotInfo.startTime) && (
                     <Button
                       variant={"destructive"}
@@ -199,7 +199,7 @@ export default function BookSlot() {
     return (
       <div className="">
         {slotInfo.startTime && new Date() < new Date(slotInfo.startTime) && (
-          <AddUserToGame min={data.minPlayers} max={data.maxPlayers} />
+          <AddUserToGame min={data.minPlayers} max={data.maxPlayers} listbool={listbool} updateBookingList={updateBookingList} />
         )}
       </div>
     );
@@ -252,7 +252,15 @@ function BookingCard({ item }: { item: BookingResponse }) {
   );
 }
 
-function GamesCard({ game, active, slot }: { game: Games; active: boolean, slot: SlotInfo }) {
+function GamesCard({
+  game,
+  active,
+  slot,
+}: {
+  game: Games;
+  active: boolean;
+  slot: SlotInfo;
+}) {
   return (
     <Card className="shadow-none border-0 p-5 md:p-10">
       <div className="font-bold text-2xl text-gray-700">{game.name}</div>
@@ -277,16 +285,12 @@ function GamesCard({ game, active, slot }: { game: Games; active: boolean, slot:
       </div>
       <div className="flex items-center gap-4">
         <p className="">
-          <b>Slot Start time:</b> {new Date(slot.startTime).toLocaleTimeString(
-            undefined,
-            DateOptions,
-          )}
+          <b>Slot Start time:</b>{" "}
+          {new Date(slot.startTime).toLocaleTimeString(undefined, DateOptions)}
         </p>
         <p className="">
-          <b>Slot Closing Time:</b> {new Date(slot.endTime).toLocaleTimeString(
-            undefined,
-            DateOptions,
-          )}
+          <b>Slot Closing Time:</b>{" "}
+          {new Date(slot.endTime).toLocaleTimeString(undefined, DateOptions)}
         </p>
       </div>
       {active && <div className="">{game.active}</div>}
@@ -294,7 +298,7 @@ function GamesCard({ game, active, slot }: { game: Games; active: boolean, slot:
   );
 }
 
-function AddUserToGame({ min, max }: { min: number; max: number }) {
+function AddUserToGame({ min, max, listbool, updateBookingList }: { min: number; max: number, listbool:boolean ,updateBookingList: Dispatch<SetStateAction<boolean>> }) {
   const { slotId } = useParams();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
@@ -346,6 +350,7 @@ function AddUserToGame({ min, max }: { min: number; max: number }) {
     onSuccess: () => {
       notify.success("Booking Request Sent", "Wait for the approval.");
       setGamePartner([]);
+      updateBookingList(!listbool)
     },
     onError: (err: any) => {
       notify.error(

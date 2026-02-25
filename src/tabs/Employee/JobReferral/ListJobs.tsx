@@ -79,8 +79,9 @@ const ShareJobAction = ({
       notify.success("Shared", "Job shared to friend successfully");
     },
 
-    onError: (error) => {
-      notify.error("Error", error.message);
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response)
     },
   });
 
@@ -174,8 +175,9 @@ const ReferrJobAcction = ({
       notify.success("Referred", "Friend referred successfully");
     },
 
-    onError: (error) => {
-      notify.error("Error", error.message);
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error("Error", error.response)
     },
   });
 
@@ -189,8 +191,9 @@ const ReferrJobAcction = ({
         .then((res) => res.data);
     },
 
-    onError: (error) => {
-      notify.error("Error while uploading CV", error.message);
+    onError: (error: any) => {
+      notify.error("Error while uploading CV", error.response.data.message);
+      console.error(error.response)
     },
   });
 
@@ -225,8 +228,8 @@ const ReferrJobAcction = ({
 
       await referrFriend.mutateAsync(payload);
     } catch (error: any) {
-      notify.error("Error", error.message);
-      console.error(error.message);
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
       const payload = { publicId: publicId };
       await api.delete("/doc", { data: payload, withCredentials: true });
     }

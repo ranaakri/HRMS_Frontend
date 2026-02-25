@@ -67,9 +67,9 @@ export default function AddTravel() {
       notify.success("Success!!!", "Travel Details added successfully.");
     },
 
-    onError: (error) => {
-      notify.error("Faild to add travel details", error.message);
-      console.log(error.cause);
+    onError: (error: any) => {
+      notify.error("Faild to add travel details", error.response.data.message);
+      console.log(error.response);
     },
   });
 

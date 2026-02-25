@@ -14,6 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { RiUserSharedLine } from "react-icons/ri";
+import { FaEdit, FaRegEye, FaShare } from "react-icons/fa";
+import { IoMdMenu } from "react-icons/io";
 
 export const DateOptions: Intl.DateTimeFormatOptions = {
   timeZone: "Asia/Kolkata",
@@ -82,21 +85,24 @@ export default function ListJobs() {
           <div className="flex justify-center items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline">Open</Button>
+                <Button variant="outline"><IoMdMenu /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white">
                 <DropdownMenuGroup>
                   <DropdownMenuItem>
+                    <FaRegEye />
                     <Link to={`view/${rowdata.jobId}`}>View</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem variant={"default"}>
+                    <FaEdit />
                     <Link to={`update/${rowdata.jobId}`}>Update</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    {" "}
+                    <FaShare />
                     <Link to={`shares/${rowdata.jobId}`}>Shares</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
+                    <RiUserSharedLine />
                     <Link to={`referrals/${rowdata.jobId}`}>Referrals</Link>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -127,9 +133,9 @@ export default function ListJobs() {
       <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 bg-white">
         List Jobs
       </h2>
-      <div className="">
-        <Link to={"share"} className="p-2 px-4 bg-black text-white rounded-md">
-          Share a Job
+      <div className="flex">
+        <Link to={"share"} className="p-2 px-4 bg-black text-white rounded-md flex gap-2 items-center justify-center">
+          <FaShare /> Share a Job
         </Link>
       </div>
       {data ? (

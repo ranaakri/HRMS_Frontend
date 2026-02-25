@@ -9,6 +9,7 @@ import { MdAdd } from "react-icons/md";
 import { FaBookmark } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/components/custom/Notification";
+import { useConfirm } from "@/hooks/usecontirm";
 
 export interface Games {
   active: boolean;
@@ -114,6 +115,7 @@ export default function ListAllGames({
 function GamesCard({ game, active }: { game: Games; active: boolean }) {
   const { user } = useAuth();
   console.log(game);
+  const {confirm, ConfirmComponent} = useConfirm()
 
   const [interest, setInterest] = useState<boolean>(game.interested);
 
@@ -137,7 +139,7 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
       return await api.delete("/game-interest", {data: data}).then((res) => res.data);
     },
     onSuccess: () => {
-      notify.success("Success!!", "Game is added as interest");
+      notify.success("Success!!", "Game is removed from interest");
       return;
     },
     onError: (error: any) => {
@@ -164,7 +166,8 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
       notify.error("Logged out", "Please login again");
       return;
     }
-    await removeAsInterest.mutateAsync({
+    if(! await confirm("Are you sure you want to remove this game from interest ?")) return
+    removeAsInterest.mutateAsync({
       userId: user?.userId,
       gameId: game.gameId,
     });
@@ -232,6 +235,7 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
           </Button>
         )}
       </div>
+      {ConfirmComponent}
     </Card>
   );
 }

@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { notify } from "./Notification";
+import { useConfirm } from "@/hooks/usecontirm";
 
 export interface ITravelingUser {
   travelBalance: number;
@@ -22,6 +23,7 @@ interface User {
 
 export default function UpdateTravelingUser() {
   const { travelId } = useParams();
+  const {confirm, ConfirmComponent} = useConfirm();
 
   const [travelingUsers, setTravelingUsers] = useState<ITravelingUser[]>([]);
 
@@ -39,23 +41,24 @@ export default function UpdateTravelingUser() {
     setTravelingUsers(data);
   }, [travelingUsers]);
 
-  const RemoveUserFormTravelList = (travelingUserId: number) => {
+  const RemoveUserFormTravelList = async (travelingUserId: number) => {
     try {
-      const con = confirm("Are you sure you want to remove traveling user");
+      const con = await confirm("Are you sure you want to remove traveling user");
       if (con === true) {
         setTravelingUsers(
           travelingUsers.filter(
             (val) => val.travelingUserId != travelingUserId,
           ),
         );
+
         api.delete(RouteList.travelingUsers + `/${travelingUserId}`, {
           withCredentials: true,
         });
         notify.success("Traveling user removed");
       }
     } catch (error: any) {
-      console.error(error.message);
-      notify.error("Error", error.message);
+      console.error(error.response);
+      notify.error("Error", error.response.data.message);
     }
   };
 
@@ -110,6 +113,7 @@ export default function UpdateTravelingUser() {
           No Data
         </div>
       )}
+      {ConfirmComponent}
     </div>
   );
 }

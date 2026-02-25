@@ -27,7 +27,7 @@ export interface UserData {
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
-const getCookie = (name: string) => {
+export const getCookie = (name: string) => {
   const cookies = document.cookie.split("; ");
   const foundCookie = cookies.find((row) => row.startsWith(`${name}=`));
   return foundCookie ? foundCookie.split("=")[1] : null;

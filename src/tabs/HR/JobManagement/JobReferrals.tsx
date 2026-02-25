@@ -88,9 +88,9 @@ function CandidateCard({ item }: { item: IJobReferralsRes }) {
       notify.success("Success", "Status successfully changed");
     },
 
-    onError: (error) => {
-      notify.error("Error", error.message);
-      console.error(error.cause);
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
     },
   });
 

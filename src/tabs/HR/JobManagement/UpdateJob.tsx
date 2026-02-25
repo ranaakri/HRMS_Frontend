@@ -132,8 +132,9 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
       notify.success("Success!!!", "Job Details updated successfully.");
     },
 
-    onError: (error) => {
-      notify.error("Faild to update job details", error.message);
+    onError: (error: any) => {
+      notify.error("Faild to update job details", error.response.data.message);
+      console.error(error.response)
     },
   });
 
@@ -169,8 +170,8 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
         notify.success("Job deleted succesfully");
         navigate("/job", { replace: true });
       } catch (error: any) {
-        notify.error("Error", error.message);
-        console.log(error);
+        notify.error("Error",error.response.data.message);
+        console.error(error.response);
       }
     }
   };
@@ -443,8 +444,9 @@ function UploadJdFile({
       notify.success("Success!!!", "Job Description file added successfully.");
     },
 
-    onError: (error) => {
-      notify.error("Faild to add job description file", error.message);
+    onError: (error: any) => {
+      notify.error("Faild to add job description file", error.response.data.message);
+      console.error(error.response)
     },
   });
 

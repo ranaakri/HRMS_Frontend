@@ -21,11 +21,16 @@ export default function OrganizationChart() {
 
   useEffect(() => {
     if (user?.userId && !selectedUserId) {
-        setSelectedUserId(user.userId);
+      setSelectedUserId(user.userId);
     }
   }, [user, selectedUserId]);
 
-  const { data: list = [], isLoading, isError, error } = useQuery<IOrganizationChart[]>({
+  const {
+    data: list = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery<IOrganizationChart[]>({
     queryKey: ["fetchOrg", selectedUserId],
     queryFn: async () => {
       const res = await api.get(`/users/org/${selectedUserId}`);
@@ -42,7 +47,7 @@ export default function OrganizationChart() {
       <div className="flex justify-between w-full mb-4">
         <h2 className="text-2xl font-bold text-gray-500">Organization Chart</h2>
         {selectedUserId !== user?.userId && (
-          <button 
+          <button
             onClick={() => setSelectedUserId(user?.userId || null)}
             className="text-sm text-blue-500 underline"
           >
@@ -53,23 +58,26 @@ export default function OrganizationChart() {
 
       <div className="flex flex-col items-center">
         {list.map((item) => (
-          <div 
-            className="cursor-pointer hover:opacity-80 transition-opacity" 
-            onClick={() => setSelectedUserId(item.userId)} 
+          <div
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setSelectedUserId(item.userId)}
             key={item.userId}
           >
             <HirarchyCard color="blue" item={item} />
             <div className="text-center text-blue-500">|</div>
           </div>
         ))}
-        
+
         {selectedUserId && (
           <div className="">
-            <AssignedEmployees userId={selectedUserId} open={true} setSelectedUserId={setSelectedUserId} />
+            <AssignedEmployees
+              userId={selectedUserId}
+              open={true}
+              setSelectedUserId={setSelectedUserId}
+            />
           </div>
         )}
       </div>
     </Card>
   );
 }
-

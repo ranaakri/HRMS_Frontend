@@ -83,10 +83,7 @@ export default function EditPost() {
   const updatePost = useMutation({
     mutationFn: async (data: CreatePost) =>
       api
-        .put(
-          `/post/updatedBy/${user?.userId}/post/${postId}`,
-          data,
-        )
+        .put(`/post/updatedBy/${user?.userId}/post/${postId}`, data)
         .then((res) => res.data),
     onSuccess: () => {
       notify.success("Success", "Post updated successfully");
@@ -134,7 +131,7 @@ export default function EditPost() {
         visibleToManager: manager,
       };
 
-    //   console.log(payload)
+      //   console.log(payload)
 
       await updatePost.mutateAsync(payload);
     } catch {
@@ -143,88 +140,120 @@ export default function EditPost() {
   };
 
   return (
-    <Card className="p-6 md:p-10 bg-white shadow-md rounded-xl">
-      <h2 className="text-2xl font-bold text-gray-700 mb-6">
-        Edit Post
-      </h2>
+    <div className="flex justify-center bg-gray-50 py-10">
+      <Card className="w-full max-w-2xl p-6 md:p-8 bg-white shadow-lg rounded-2xl border">
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800">Edit Post</h2>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="mb-4">
-          <label>Title</label>
-          <Input {...register("title", { required: "Title is required" })} />
-          {errors.title && (
-            <p className="text-red-500 text-sm">
-              {errors.title.message}
-            </p>
-          )}
-        </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="flex bg-gray-100 rounded-lg p-1 w-fit">
+            <button
+              type="button"
+              onClick={() => setPostType("Text")}
+              className={`px-4 py-1.5 rounded-md text-sm transition ${
+                postType === "Text"
+                  ? "bg-white shadow text-black"
+                  : "text-gray-500"
+              }`}
+            >
+              Text
+            </button>
 
-        <div className="mb-4">
-          <label>Description</label>
-          <Textarea {...register("description")} />
-        </div>
+            <button
+              type="button"
+              onClick={() => setPostType("Image")}
+              className={`px-4 py-1.5 rounded-md text-sm transition ${
+                postType === "Image"
+                  ? "bg-white shadow text-black"
+                  : "text-gray-500"
+              }`}
+            >
+              Image
+            </button>
+          </div>
 
-        <div className="mb-4">
-          <label>Tags</label>
-          <Input {...register("tags")} />
-        </div>
-
-        <div className="mb-4 flex gap-4 items-center">
-          <span>Visible to:</span>
-          <label>
-            <input
-              type="checkbox"
-              checked={emp}
-              onChange={() => setEmp(!emp)}
-            />{" "}
-            Employee
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              checked={manager}
-              onChange={() => setManager(!manager)}
-            />{" "}
-            Manager
-          </label>
-        </div>
-
-        <div className="mb-4">
-          <Button
-            type="button"
-            onClick={() =>
-              setPostType(postType === "Image" ? "Text" : "Image")
-            }
-            className="bg-gray-800 text-white"
-          >
-            {postType === "Image"
-              ? "Switch to Text"
-              : "Switch to Image"}
-          </Button>
-        </div>
-
-        {postType === "Image" && (
-          <div className="mb-4">
-            <Input type="file" onChange={handleFileChange} />
-
-            {previewUrl && (
-              <img
-                src={previewUrl}
-                alt="Preview"
-                className="mt-4 rounded-xl max-h-80 object-contain border"
-              />
+          <div>
+            <Input
+              placeholder="Edit title..."
+              className="border-0 border-b rounded-none focus-visible:ring-0 text-lg"
+              {...register("title", { required: "Title is required" })}
+            />
+            {errors.title && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.title.message}
+              </p>
             )}
           </div>
-        )}
 
-        <Button
-          type="submit"
-          className="bg-black text-white"
-          disabled={updatePost.isPending || addImage.isPending}
-        >
-          {updatePost.isPending ? "Updating..." : "Update Post"}
-        </Button>
-      </form>
-    </Card>
+          <div>
+            <Textarea
+              placeholder="Edit caption..."
+              className="resize-none min-h-25 border rounded-xl"
+              {...register("description")}
+            />
+          </div>
+
+          {/* Tags */}
+          <Input
+            placeholder="Edit tags (e.g. travel, work, tech)"
+            className="rounded-xl"
+            {...register("tags")}
+          />
+
+          {postType === "Image" && (
+            <div className="space-y-4">
+              <label className="block text-sm text-gray-500">
+                Update Image
+              </label>
+
+              <Input type="file" onChange={handleFileChange} />
+
+              {previewUrl && (
+                <div className="rounded-xl overflow-hidden border bg-gray-100">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full max-h-100 object-contain"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between bg-gray-50 p-4 rounded-xl border">
+            <span className="text-sm font-medium text-gray-700">
+              Visible To
+            </span>
+
+            <div className="flex gap-6 text-sm">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={emp}
+                  onChange={() => setEmp(!emp)}
+                />
+                Employee
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={manager}
+                  onChange={() => setManager(!manager)}
+                />
+                Manager
+              </label>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={updatePost.isPending || addImage.isPending}
+            className="w-full bg-black text-white rounded-xl h-11 text-sm font-medium hover:opacity-90 transition"
+          >
+            {updatePost.isPending ? "Updating..." : "Update Post"}
+          </Button>
+        </form>
+      </Card>
+    </div>
   );
 }

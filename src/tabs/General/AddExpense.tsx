@@ -114,7 +114,7 @@ export default function AddExpense() {
       return;
     },
     onError: (error: any) => {
-      notify.error("Error", error.message);
+      notify.error("Error", error.response.data.message);
       console.error(error.response);
       return;
     },
@@ -131,7 +131,7 @@ export default function AddExpense() {
         .then((res) => res.data);
     },
     onError: (error: any) => {
-      notify.success("Error", error.message);
+      notify.success("Error", error.response.data.message);
       console.error(error.cause);
       return;
     },

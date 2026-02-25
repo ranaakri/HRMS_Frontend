@@ -97,9 +97,9 @@ export default function CommentsDialog({
   const handleAdd = async () => {
     if (!user || !postId) return;
 
-    if(commentText && commentText.trim().length <= 0){
-        notify.error("Error", "Comment can not be empty")
-        return;
+    if (commentText && commentText.trim().length <= 0) {
+      notify.error("Error", "Comment can not be empty");
+      return;
     }
 
     const payload: AddComment = {
@@ -147,6 +147,10 @@ export default function CommentsDialog({
                 commentId,
               })
             }
+            onDeleteAfterWarn={(commentId) => {
+              queryClient.invalidateQueries({ queryKey: ["comments", commentId] });
+              onCommentCountChange(-1);
+            }}
             onEdit={(data) => editComment.mutate(data)}
           />
         ))}
@@ -160,6 +164,7 @@ function CommentItem({
   currentUserId,
   onDelete,
   onEdit,
+  onDeleteAfterWarn,
 }: {
   comment: CommentResponse;
   currentUserId?: number;
@@ -170,15 +175,18 @@ function CommentItem({
     commentText: string;
     updatedAt: string;
   }) => void;
+  onDeleteAfterWarn: (commentId: number) => void;
 }) {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.commentText);
+  const [isWarning, setIsWarning] = useState(false);
+  const [reason, setReason] = useState("");
 
   const handleSave = () => {
-
-    if(editText && editText.trim().length <= 0){
-        notify.error("Error", "Comment can not be empty")
-        return;
+    if (editText && editText.trim().length <= 0) {
+      notify.error("Error", "Comment can not be empty");
+      return;
     }
 
     onEdit({
@@ -191,51 +199,117 @@ function CommentItem({
     setIsEditing(false);
   };
 
+  const handleWarning = useMutation({
+    mutationFn: async ({
+      warnedBy,
+      reason,
+      time,
+    }: {
+      warnedBy: number;
+      reason: string;
+      time: string;
+    }) =>
+      await api.delete(`/post/warning/comment/${comment.commentId}`, {
+        data: { warnedBy, reason, time },
+      }),
+    onSuccess: () => {
+      notify.success("Sent!!", "Comment warning sent sucessfully");
+      onDeleteAfterWarn(comment.commentId);
+      setIsWarning(false);
+      return;
+    },
+    onError: (error: any) => {
+      console.error(error.response);
+      notify.error("Error", error.response.data.message);
+      return;
+    },
+  });
+
+  const handleWarningFn = async () => {
+    if (!user) {
+      notify.error("Logged out", "Please login again");
+      return;
+    }
+    await handleWarning.mutateAsync({
+      warnedBy: user?.userId,
+      reason: reason,
+      time: new Date().toISOString(),
+    });
+  };
+
   return (
-    <div className="flex gap-3 py-3 border-b">
-      <img
-        src={comment.commentedBy.profileUrl}
-        className="w-8 h-8 rounded-full object-cover"
-      />
+    <div className="border-b">
+      <div className="flex gap-3 py-3">
+        <img
+          src={comment.commentedBy.profileUrl}
+          className="w-8 h-8 rounded-full object-cover"
+        />
 
-      <div className="flex-1">
-        <p className="font-semibold text-sm">{comment.commentedBy.name}</p>
+        <div className="flex-1">
+          <p className="font-semibold text-sm">{comment.commentedBy.name}</p>
 
-        {isEditing ? (
-          <div className="flex gap-2 mt-1">
-            <Input
-              value={editText}
-              onChange={(e) => setEditText(e.target.value)}
-              required
-            />
-            <Button size="sm" onClick={handleSave}>
-              Save
+          {isEditing ? (
+            <div className="flex gap-2 mt-1">
+              <Input
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                required
+              />
+              <Button size="sm" onClick={handleSave}>
+                Save
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-700">{comment.commentText}</p>
+          )}
+        </div>
+
+        {comment.commentedBy.userId === currentUserId && (
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              Edit
+            </Button>
+
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-red-500"
+              onClick={() => onDelete(comment.commentId)}
+            >
+              Delete
             </Button>
           </div>
-        ) : (
-          <p className="text-sm text-gray-700">{comment.commentText}</p>
         )}
+        {user?.role === "HR" &&
+          comment.commentedBy.userId !== currentUserId && (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsWarning(!isWarning)}
+              >
+                Warn
+              </Button>
+            </div>
+          )}
       </div>
 
-      {comment.commentedBy.userId === currentUserId && (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsEditing(!isEditing)}
-          >
-            Edit
+      {isWarning && (
+        <form className="flex gap-4 mb-2" onSubmit={() => handleWarningFn()}>
+          <Input
+            type="text"
+            required
+            placeholder="warning.."
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <Button type="submit" className="bg-amber-400 text-white">
+            Warn & Delete
           </Button>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-red-500"
-            onClick={() => onDelete(comment.commentId)}
-          >
-            Delete
-          </Button>
-        </div>
+        </form>
       )}
     </div>
   );

@@ -48,8 +48,8 @@ export default function JobShares() {
       return;
     },
     onError: (error: any) => {
-      notify.error("Error", error.message);
-      console.error(error.cause);
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
       return;
     },
   });

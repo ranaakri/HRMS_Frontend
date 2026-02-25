@@ -129,8 +129,9 @@ export default function CreateJob() {
         .then((res) => res.data);
     },
 
-    onError: (error) => {
-      notify.error("Error while uploading file", error.message);
+    onError: (error: any) => {
+      notify.error("Error while uploading file", error.response.data.message);
+      console.error(error.response)
     },
   });
 
@@ -146,8 +147,9 @@ export default function CreateJob() {
       notify.success("Success!!!", "Job Details added successfully.");
     },
 
-    onError: (error) => {
-      notify.error("Faild to add job details", error.message);
+    onError: (error: any) => {
+      notify.error("Faild to add job details", error.response.data.message);
+      console.error(error.response)
     },
   });
 
@@ -179,8 +181,8 @@ export default function CreateJob() {
       };
       await mutation.mutateAsync(finalData);
     } catch (error: any) {
-      console.error(error.message);
-      notify.error("Error", error.message);
+      console.error(error.response);
+      notify.error("Error", error.response.data.message);
       const payload = { publicId: publicId };
       await api.delete("/doc", { data: payload, withCredentials: true });
     }
