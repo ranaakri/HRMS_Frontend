@@ -10,7 +10,6 @@ import ExpenseList from "../General/ExpenseList";
 import AddExpense from "../General/AddExpense";
 import ListAllGames from "../Game/ListAllGames";
 import ListGameSlots from "../Game/ListGameSlots";
-import { Home } from "lucide-react";
 import ListJobsEmployee from "../Employee/JobReferral/ListJobs";
 import MyReferrals from "../Employee/JobReferral/MyReferrals";
 import MyShares from "../Employee/JobReferral/MyShares";
@@ -22,6 +21,7 @@ import EditPost from "../Post/EditPost";
 import ListAllPost from "../Post/ListAllPost";
 import SearchByUsers from "../Post/SearchByUsers";
 import CalenderEvents from "../../components/custom/EventCalender.tsx";
+import Home from "../Post/Home.tsx";
 
 export const managerRoutes: RouteObject = {
   path: "manager",
