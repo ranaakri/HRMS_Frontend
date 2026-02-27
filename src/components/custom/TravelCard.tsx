@@ -51,10 +51,12 @@ export default function TravelCard({
   details,
   expense,
   myTarvelPlan,
+  homePage
 }: {
   details: TravelPlanResponse;
   expense: boolean;
   myTarvelPlan: boolean;
+  homePage?:boolean;
 }) {
   const { user } = useAuth();
 
@@ -66,7 +68,8 @@ export default function TravelCard({
   }, []);
 
   return (
-    <Card className="overflow-hidden border-0 shadow-lg bg-white text-black m-4 group transition-all hover:shadow-xl max-w-4xl mx-4 border-gray-500">
+    <Card className="overflow-hidden border-0 shadow-lg bg-white text-black m-4 group transition-all hover:shadow-xl mx-4 border-gray-500">
+      <div className="">
       <div className="flex flex-col md:flex-row">
         <div className="md:w-2/5 relative m-4 rounded-md flex items-center">
           {details.travelGallery.length > 0 ? (
@@ -141,30 +144,33 @@ export default function TravelCard({
               </div>
             </div> */}
           </div>
-          <div className="">
+          
+        </div>
+        </div>
+        <div className="">
             {user?.role === "HR" && (
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="flex m-4 justify-self-end gap-4 text-sm">
                 <Link
-                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`${myTarvelPlan ? "../../" : ""}manage/update/${details.travelId}`}
+                  className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={homePage ? `../travel/manage/update/${details.travelId}` :`${myTarvelPlan ? "../../" : ""}manage/update/${details.travelId}`}
                 >
                   Update
                 </Link>
                 <Link
-                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`${myTarvelPlan ? "../../" : ""}manage/add-traveler/${details.travelId}`}
+                  className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={homePage ? `../travel/manage/add-traveler/${details.travelId}` :`${myTarvelPlan ? "../../" : ""}manage/add-traveler/${details.travelId}`}
                 >
                   Traveling Persons
                 </Link>
                 <Link
-                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`${myTarvelPlan ? "../../" : ""}manage/upload-documents/${details.travelId}`}
+                  className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={homePage ? `../travel/manage/upload-documents/${details.travelId}` : `${myTarvelPlan ? "../../" : ""}manage/upload-documents/${details.travelId}`}
                 >
                   Upload Documents
                 </Link>
                 {!expense && (
                   <Link
-                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
                     to={`manage/expense-approval/${details.travelId}`}
                   >
                     Approve Expense
@@ -172,8 +178,8 @@ export default function TravelCard({
                 )}
                 {expense && (
                   <Link
-                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                    to={`expense/${details.travelId}`}
+                    className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    to={homePage ? `../travel/manage/my-travel-plans/expense/${details.travelId}`:`expense/${details.travelId}`}
                   >
                     Manage Expense
                   </Link>
@@ -183,14 +189,14 @@ export default function TravelCard({
             {user?.role === "Employee" && (
               <div className="grid grid-cols-3 gap-4 text-sm">
                 <Link
-                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`manage/expense/${details.travelId}`}
+                  className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={homePage ? `../travel/manage/expense/${details.travelId}` :`manage/expense/${details.travelId}`}
                 >
                   Manage Expense
                 </Link>
                 <Link
-                  className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                  to={`manage/upload-documents/${details.travelId}`}
+                  className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                  to={homePage ? `../travel/manage/upload-documents/${details.travelId}` :`manage/upload-documents/${details.travelId}`}
                 >
                   Upload Document
                 </Link>
@@ -200,7 +206,7 @@ export default function TravelCard({
               <div className="grid grid-cols-3 gap-4 text-sm">
                 {!expense && (
                   <Link
-                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
                     to={`/manager/travel/manage/traveling-users/${details.travelId}`}
                   >
                     Traveling Users
@@ -208,16 +214,16 @@ export default function TravelCard({
                 )}
                 {expense && (
                   <Link
-                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                    to={`../upload-documents/${details.travelId}`}
+                    className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    to={`${homePage? `../travel/manage/upload-documents/${details.travelId}` : `../upload-documents/${details.travelId}`}`}
                   >
                     Upload Document
                   </Link>
                 )}
                 {expense && (
                   <Link
-                    className="p-2 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
-                    to={`expense/${details.travelId}`}
+                    className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
+                    to={homePage ? `../travel/manage/my-travel-plans/expense/${details.travelId}` : `expense/${details.travelId}`}
                   >
                     Manage Expense
                   </Link>
@@ -225,7 +231,6 @@ export default function TravelCard({
               </div>
             )}
           </div>
-        </div>
       </div>
     </Card>
   );

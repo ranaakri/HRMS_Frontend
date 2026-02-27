@@ -17,6 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { DateOptions } from "../HR/JobManagement/ListJobs";
 
 export interface IExpenseListRes {
   expenseId: number;
@@ -83,9 +85,8 @@ export default function ExpenseList({
   const [remarks, setRemarks] = useState("");
   const { user } = useAuth();
 
-  const [startDate, setStartDate] = useState();
-  const [endDate, setEndDate] = useState();
-  const [empName, setEmpName] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState(new Date().toISOString());
   const [status, setStatus] = useState("");
 
   const travelingUserBudget = useQuery({
@@ -96,22 +97,45 @@ export default function ExpenseList({
           `/travel/traveling-user/travelId/${travelId}/userId/${user?.userId}`,
         )
         .then((res) => res.data),
-      enabled: !isForApproval && !!user?.userId
+    enabled: !isForApproval && !!user?.userId && !!travelId,
   });
 
   useEffect(() => {
     if (travelingUserBudget.data) {
       setBudget(travelingUserBudget.data);
     }
-  }, []);
+  }, [travelingUserBudget.data]);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["allExpenses", isForApproval, user?.userId , travelId],
-    queryFn: () =>
-      api
-        .get<IExpenseListRes[]>(isForApproval ? `/travel/expense/${travelId}` : `/travel/expense/user/${user?.userId}/travel/${travelId}`)
-        .then((res) => res.data),
-    enabled: !!user?.userId && !!travelId
+    queryKey: [
+      "allExpenses",
+      isForApproval,
+      user?.userId,
+      travelId,
+      startDate,
+      endDate,
+    ],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (startDate > endDate) {
+        notify.error(
+          "Error",
+          "Starting date can not be grater then ending date",
+        );
+        return [];
+      }
+      if (startDate)
+        params.append("startDate", new Date(startDate).toISOString());
+      if (endDate) params.append("endDate", new Date(endDate).toISOString());
+
+      const res = api
+        .get<
+          IExpenseListRes[]
+        >(isForApproval ? `/travel/expense/${travelId}?${params.toString()}` : `/travel/expense/user/${user?.userId}/travel/${travelId}`)
+        .then((res) => res.data);
+      return res;
+    },
+    enabled: !!user?.userId && !!travelId,
   });
 
   useEffect(() => {
@@ -122,10 +146,8 @@ export default function ExpenseList({
 
   useEffect(() => {
     if (data && status.length > 0) {
-      if(status === "ALL")
-        setExpenseList(data)
-        else
-      setExpenseList(data.filter((val) => val.status === status));
+      if (status === "ALL") setExpenseList(data);
+      else setExpenseList(data.filter((val) => val.status === status));
     }
   }, [status]);
 
@@ -157,19 +179,19 @@ export default function ExpenseList({
     },
   });
 
-  const deleteExpense = useMutation({
-    mutationFn: async (id: number) => {
-      return await api.delete(`/travel/expense/${id}`).then((res) => res.data);
-    },
-    onSuccess: (_, id) => {
-      notify.success("Expense deleted");
-      setExpenseList(expenseList.filter((val) => val.expenseId != id));
-    },
-    onError: (error: any) => {
-      notify.error("Error", error.response.data.message);
-      console.error(error.response);
-    },
-  });
+  // const deleteExpense = useMutation({
+  //   mutationFn: async (id: number) => {
+  //     return await api.delete(`/travel/expense/${id}`).then((res) => res.data);
+  //   },
+  //   onSuccess: (_, id) => {
+  //     notify.success("Expense deleted");
+  //     setExpenseList(expenseList.filter((val) => val.expenseId != id));
+  //   },
+  //   onError: (error: any) => {
+  //     notify.error("Error", error.response.data.message);
+  //     console.error(error.response);
+  //   },
+  // });
 
   const handleApproval = async (id: number, status: string) => {
     await changeStatus.mutateAsync({ id: id, statusdata: status });
@@ -210,7 +232,7 @@ export default function ExpenseList({
                 </Link>
               </div>
             )}
-            <div className="mt-4">
+            <div className="mt-4 flex gap-4">
               <Select onValueChange={(value) => setStatus(value)}>
                 <SelectTrigger className="w-full max-w-48">
                   <SelectValue placeholder="Select Status" />
@@ -225,6 +247,23 @@ export default function ExpenseList({
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              {user?.role === "HR" && (
+                <div className="flex gap-4">
+                  <Input
+                    type="date"
+                    value={startDate}
+                    className="bg-white"
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+
+                  <Input
+                    type="date"
+                    value={endDate}
+                    className="bg-white"
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -285,7 +324,7 @@ export default function ExpenseList({
                     {item.status}
                   </Badge>
                 </div>
-                <p className="">{item.expenseDate}</p>
+                <p className="">{new Date(item.expenseDate).toLocaleDateString(undefined, DateOptions)}</p>
               </div>
               <div className="">
                 <ListExpsenseProofs proofs={item.expensesProofs} />

@@ -21,7 +21,7 @@ import { IoMdMenu } from "react-icons/io";
 export const DateOptions: Intl.DateTimeFormatOptions = {
   timeZone: "Asia/Kolkata",
   year: "numeric",
-  month: "numeric",
+  month: "long",
   day: "numeric",
   hour: "numeric",
   minute: "numeric",

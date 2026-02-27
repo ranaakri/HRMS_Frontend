@@ -6,7 +6,7 @@ import { Briefcase, Settings, ClipboardList } from "lucide-react";
 import Logo from "../assets/images/image.png";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
-import { FaHome, FaGamepad } from "react-icons/fa";
+import { FaGamepad } from "react-icons/fa";
 import { TbBrandInstagramFilled } from "react-icons/tb";
 import { notify } from "@/components/custom/Notification";
 import { IoIosNotifications } from "react-icons/io";
@@ -15,6 +15,10 @@ import api from "@/api/api";
 import { Badge } from "@/components/ui/badge";
 import { DateOptions } from "./HR/JobManagement/ListJobs";
 import { RiOrganizationChart } from "react-icons/ri";
+import { AiFillThunderbolt } from "react-icons/ai";
+import { IoPeople } from "react-icons/io5";
+import { FaBuildingShield } from "react-icons/fa6";
+
 import {
   Dialog,
   DialogClose,
@@ -41,6 +45,7 @@ interface Notification {
 }
 
 const EmployeeItems: MenuItem[] = [
+  { name: "Quick Access", path: "employee/home", icon: AiFillThunderbolt },
   { name: "Achivements", path: "employee/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "employee/game", icon: FaGamepad },
   { name: "Travel Plans", path: "employee/travel", icon: Briefcase },
@@ -54,6 +59,7 @@ const EmployeeItems: MenuItem[] = [
 ];
 
 const ManagerItems: MenuItem[] = [
+  { name: "Quick Access", path: "manager/home", icon: AiFillThunderbolt },
   { name: "Achivements", path: "manager/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "manager/game", icon: FaGamepad },
   { name: "Travel Plans", path: "manager/travel", icon: Briefcase },
@@ -67,11 +73,14 @@ const ManagerItems: MenuItem[] = [
 ];
 
 const HRItems: MenuItem[] = [
+  { name: "Quick Access", path: "hr/home", icon: AiFillThunderbolt },
   { name: "Achivements", path: "hr/post", icon: TbBrandInstagramFilled },
   { name: "Games", path: "hr/game", icon: FaGamepad },
   { name: "Travel Management", path: "hr/travel", icon: Briefcase },
   { name: "Job Management", path: "hr/job", icon: ClipboardList },
   { name: "Organization", path: "hr/org-chart", icon: RiOrganizationChart },
+  { name: "Users", path: "hr/users", icon: IoPeople },
+  { name: "Department", path: "hr/department", icon: FaBuildingShield },
   { name: "Settings", path: "hr/profile", icon: Settings },
 ];
 
@@ -125,7 +134,10 @@ export default function Dashboard() {
       api.patch(`/notification/${receiverId}`).then((res) => res.data),
     onSuccess: () => notify.success("Marked", "Notification marked as read"),
     onError: (error: any) =>
-      notify.error("Error", error.response.data.message || "Something went wrong"),
+      notify.error(
+        "Error",
+        error.response.data.message || "Something went wrong",
+      ),
   });
 
   const handleMarkRead = async (receiverId: number) => {
@@ -141,6 +153,8 @@ export default function Dashboard() {
       setSidebarOpen(false);
     }
   };
+
+  console.log(new Date("2026-02-10 11:30:00.2600000 +00:00").toISOString())
 
   return (
     <div className="flex h-screen overflow-hidden">

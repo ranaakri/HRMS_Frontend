@@ -63,7 +63,7 @@ export default function OrganizationChart() {
             onClick={() => setSelectedUserId(item.userId)}
             key={item.userId}
           >
-            <HirarchyCard color="blue" item={item} />
+            <HirarchyCard item={item} isMe={item.userId === selectedUserId} />
             <div className="text-center text-blue-500">|</div>
           </div>
         ))}

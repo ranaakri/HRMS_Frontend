@@ -40,7 +40,6 @@ export default function AssignedEmployees({
             list.map((item) => (
               <div className="cursor-pointer" onClick={() => setSelectedUserId(item.userId)}>
                 <HirarchyCard
-                  color="yellow"
                   item={item}
                   key={item.userId + "_assigned"}
                 />
