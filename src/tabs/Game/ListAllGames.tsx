@@ -3,10 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { MdAdd } from "react-icons/md";
-import { FaBookmark } from "react-icons/fa";
+import { FaBookmark, FaRegStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/components/custom/Notification";
 import { useConfirm } from "@/hooks/usecontirm";
@@ -20,6 +20,7 @@ export interface Games {
   name: string;
   openTime: string;
   slotDuration: number;
+  favourite: boolean;
   interested: boolean;
 }
 
@@ -34,88 +35,75 @@ export default function ListAllGames({
   activeGames: boolean;
 }) {
   const { user } = useAuth();
-  const [gameList, setGameList] = useState<Games[]>([]);
   const [search, setSearch] = useState<string>("");
-  const [searchList, setSearchList] = useState<Games[]>([]);
-
-  const gameListRes = useQuery({
+  const {
+    data: gameList = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ["ListGames", activeGames, user?.userId],
     queryFn: async () => {
       const endpoint = activeGames ? "/game/list/" : "/game/list-all/";
-      const data = await api
-        .get<Games[]>(endpoint + user?.userId)
-        .then((res) => res.data);
-      setGameList(data);
-      return data;
+      const res = await api.get<Games[]>(endpoint + user?.userId);
+      return res.data;
     },
     enabled: !!user?.userId,
   });
 
-  useEffect(() => {
-    setSearchList(
-      gameList.filter((val) =>
-        val.name.toUpperCase().includes(search.toUpperCase()),
-      ),
-    );
-  }, [search]);
+  const filteredGames = gameList.filter((val) =>
+    val.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
-  if (gameListRes.isLoading)
-    return <div className="flex items-center justify-center">Loading...</div>;
-
-  if (gameListRes.isError)
+  if (isLoading)
     return (
-      <div className="text-red-500">Error: {gameListRes.error.message}</div>
+      <div className="p-10 text-center animate-pulse">Loading games...</div>
+    );
+  if (isError)
+    return (
+      <div className="p-10 text-red-500 text-center">
+        Error: {error.message}
+      </div>
     );
 
   return (
-    <Card className="p-5 border-0 bg-white shadow-md">
-      <h2 className="text-2xl font-bold text-gray-500 bg-white">
-        {activeGames ? "Active" : "All"} Games
-      </h2>
-      {user?.role === "HR" && (
-        <div className="">
-          <Link to={"add"} className="bg-black text-white rounded-md p-2 px-4">
-            Add new game
-          </Link>
-        </div>
-      )}
-
-      <div className="">
+    <Card className="p-6 border-none shadow-lg bg-white">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4">
         <Input
           type="text"
+          placeholder="Search games by name..."
+          className="max-w-sm"
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search..."
         />
+        {user?.role === "HR" && (
+          <Link
+            to="add"
+            className="border inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <MdAdd className="mr-2 h-4 w-4" /> Add New Game
+          </Link>
+        )}
       </div>
-      {search.length > 0 ? (
-        searchList.map((item) => (
-          <GamesCard
-            game={item}
-            active={activeGames}
-            key={item.gameId + "_List"}
-          />
-        ))
-      ) : gameList.length > 0 ? (
-        gameList.map((item) => (
-          <GamesCard
-            game={item}
-            active={activeGames}
-            key={item.gameId + "_search"}
-          />
-        ))
-      ) : (
-        <div className="flex items-center justify-center text-gray-500">
-          No Active games found
-        </div>
-      )}
+
+      <div className="grid grid-cols-1 gap-4">
+        {filteredGames.length > 0 ? (
+          filteredGames.map((item) => (
+            <GamesCard game={item} key={item.gameId} />
+          ))
+        ) : (
+          <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-lg">
+            No games found matching your criteria.
+          </div>
+        )}
+      </div>
     </Card>
   );
 }
 
-function GamesCard({ game, active }: { game: Games; active: boolean }) {
+function GamesCard({ game }: { game: Games; }) {
   const { user } = useAuth();
-  console.log(game);
-  const {confirm, ConfirmComponent} = useConfirm()
+  const [fav, setFav] = useState(game.favourite);
+  const { confirm, ConfirmComponent } = useConfirm();
 
   const [interest, setInterest] = useState<boolean>(game.interested);
 
@@ -125,6 +113,7 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
     },
     onSuccess: () => {
       notify.success("Success!!", "Game is added as interest");
+      setFav(true)
       return;
     },
     onError: (error: any) => {
@@ -136,16 +125,53 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
 
   const removeAsInterest = useMutation({
     mutationFn: async (data: GameInterest) => {
-      return await api.delete("/game-interest", {data: data}).then((res) => res.data);
+      return await api
+        .delete("/game-interest", { data: data })
+        .then((res) => res.data);
     },
     onSuccess: () => {
       notify.success("Success!!", "Game is removed from interest");
+      setFav(false)
       return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.log(error.response);
       return;
+    },
+  });
+
+  const addGameAsFav = useMutation({
+    mutationFn: async () => {
+      return await api.patch(
+        `/users/fav-game/user/${user?.userId}/game/${game.gameId}`,
+      );
+    },
+    onSuccess: () => {
+      setFav(true);
+      notify.success("Game added as favourate");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+    },
+  });
+
+  const removeGameAsFav = useMutation({
+    mutationFn: async () => {
+      return await api.delete(
+        `/users/fav-game/user/${user?.userId}/game/${game.gameId}`,
+      );
+    },
+    onSuccess: () => {
+      setFav(false);
+      notify.success("Game removed as favourate");
+      return;
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
     },
   });
 
@@ -166,7 +192,12 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
       notify.error("Logged out", "Please login again");
       return;
     }
-    if(! await confirm("Are you sure you want to remove this game from interest ?")) return
+    if (
+      !(await confirm(
+        "Are you sure you want to remove this game from interest ?",
+      ))
+    )
+      return;
     removeAsInterest.mutateAsync({
       userId: user?.userId,
       gameId: game.gameId,
@@ -175,65 +206,84 @@ function GamesCard({ game, active }: { game: Games; active: boolean }) {
   };
 
   return (
-    <Card className="bg-gray-50 border border-gray-500 shadow-md p-5 md:p-10">
-      <div className="font-bold text-2xl text-gray-700">{game.name}</div>
-      <div className="flex items-center gap-4">
-        <p className="">
-          <b>Min. Palyers:</b> {game.minPlayers}
-        </p>
-        <p className="">
-          <b>Max. Palyers:</b> {game.maxPlayers}
-        </p>
-      </div>
-      <div className="">
-        <b>Slot Duration:</b> {game.slotDuration}
-      </div>
-      <div className="flex items-center gap-4">
-        <p className="">
-          <b>Opening Time:</b> {game.openTime}
-        </p>
-        <p className="">
-          <b>Closing Time:</b> {game.closeTime}
-        </p>
-      </div>
-      {active && <div className="">{game.active}</div>}
-      <div className="flex gap-4">
-        {user?.role === "HR" && (
-          <Link
-            to={`update/${game.gameId}`}
-            className="bg-black text-white p-2 px-4 rounded-md"
-          >
-            Update Game
-          </Link>
-        )}
-        <Link
-          to={`slots/${game.gameId}`}
-          className="bg-black text-white p-2 px-4 rounded-md flex items-center gap-2"
-        >
-          <FaBookmark />
-          Book a Slot
-        </Link>
-        {interest ? (
-          <Button
-            type="button"
-            className="bg-red-500 text-white p-2 py-5 rounded-md flex items-center gap-2"
-            onClick={() => handleRemoveInterest()}
-            disabled={addAsInterest.isPending ? true : false}
-          >
-            <MdAdd />
-            Remove As Interested
+    <Card className="p-5 hover:border-primary/50 transition-colors shadow-sm border-gray-200">
+      <div className="flex flex-col lg:flex-row justify-between gap-6">
+        <div className="space-y-3 flex-1">
+          <div className="flex items-center gap-2">
+            {fav ? (
+              <Button
+                variant="secondary"
+                className="bg-amber-100 text-amber-700 size-0.5 text-sm border-amber-500"
+                onClick={async () => await removeGameAsFav.mutateAsync()}
+              >
+                <FaRegStar className="size-3" />
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                className="bg-white text-black size-0.5 text-sm"
+                onClick={async () => await addGameAsFav.mutateAsync()}
+              >
+                <FaRegStar className="size-3" />
+              </Button>
+            )}
+            <h3 className="text-xl font-bold text-foreground">{game.name}</h3>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">Players</p>
+              <p className="font-medium">
+                {game.minPlayers} - {game.maxPlayers}
+              </p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Duration</p>
+              <p className="font-medium">{game.slotDuration} mins</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Opening</p>
+              <p className="font-medium">{game.openTime}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Closing</p>
+              <p className="font-medium">{game.closeTime}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+          <Button variant="outline" asChild size="sm">
+            <Link to={`slots/${game.gameId}`}>
+              <FaBookmark className="mr-2 h-3 w-3" /> Book Slot
+            </Link>
           </Button>
-        ) : (
-          <Button
-            type="button"
-            className="bg-black text-white p-2 py-5 rounded-md flex items-center gap-2"
-            onClick={() => handleSetInterest()}
-            disabled={addAsInterest.isPending ? true : false}
-          >
-            <MdAdd />
-            Add As Interst
-          </Button>
-        )}
+
+          {interest ? (
+            <Button
+              variant="destructive"
+              className="text-red-500 bg-red-200 border border-red-500"
+              size="sm"
+              onClick={() => handleRemoveInterest()}
+            >
+              Remove Interest
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleSetInterest()}
+            >
+              Add Interest
+            </Button>
+          )}
+
+          {user?.role === "HR" && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link to={`update/${game.gameId}`}>Update</Link>
+            </Button>
+          )}
+        </div>
       </div>
       {ConfirmComponent}
     </Card>

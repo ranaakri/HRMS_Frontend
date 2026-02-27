@@ -33,13 +33,13 @@ export default function MyTravelPlans() {
   if (error) return <div className="p-8 text-red-500">Error: {error.message}</div>;
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto">
       {user?.role === "HR" && (
         <div className="ml-4 mb-6 flex gap-4">
-          <Button variant="outline" onClick={() => navigate("/hr/travel/manage/add")}>
+          <Button variant="outline" className="bg-gray-500 text-white" onClick={() => navigate("/hr/travel/manage/add")}>
             Add New Travel Plan
           </Button>
-          <Button variant="outline" onClick={() => navigate("/hr/travel")}>
+          <Button variant="outline" className="bg-gray-500 text-white" onClick={() => navigate("/hr/travel")}>
             View All Plans
           </Button>
         </div>

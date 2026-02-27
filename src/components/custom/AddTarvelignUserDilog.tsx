@@ -34,34 +34,45 @@ export default function AddTravelingUserDialog({
 
     setTravelingUsers([
       ...travelingUsers,
-      { userId: user.userId,name: user.name , travelBalance: data.travelBalance },
+      {
+        userId: user.userId,
+        name: user.name,
+        travelBalance: data.travelBalance,
+      },
     ]);
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="bg-black text-white">Add</Button>
-      </DialogTrigger>
+    <div className="">
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="bg-black text-white">
+            Add
+          </Button>
+        </DialogTrigger>
 
-      <DialogContent className="bg-white">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader className="m-2 mb-4">
-            <DialogTitle>Add {user.name}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="bg-white">
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogHeader className="m-2 mb-4">
+              <DialogTitle>Add {user.name}</DialogTitle>
+            </DialogHeader>
 
-          <Input
-            type="number"
-            min={0}
-            {...register("travelBalance", { required: true })}
-            placeholder="Travel balance"
-          />
+            <Input
+              type="number"
+              min={0}
+              {...register("travelBalance", { required: true })}
+              placeholder="Travel balance"
+            />
 
-          <DialogFooter>
-            <Button type="submit" className="bg-black m-4 text-white">Confirm</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter>
+              <Button type="submit" className="bg-black m-4 text-white">
+                Confirm
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
+

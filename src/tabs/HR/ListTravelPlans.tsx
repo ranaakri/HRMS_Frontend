@@ -37,12 +37,12 @@ export default function ListTravelPlans() {
   if (error) return <div className="p-10 text-red-500">Error: {error.message}</div>;
 
   return (
-    <div className="container p-4">
+    <div className="">
       <div className="ml-4 flex gap-4 mb-6">
         {user?.role === "HR" && (
           <Button
             variant="outline"
-            className="cursor-pointer"
+            className="cursor-pointe bg-gray-500 text-white"
             onClick={() => navigate(`/${user?.role.toLowerCase()}/travel/manage/add`)}
           >
             Add New Travel Plan
@@ -50,6 +50,7 @@ export default function ListTravelPlans() {
         )}
         <Button
           variant="outline"
+          className="cursor-pointer bg-gray-500 text-white"
           onClick={() => navigate(`/${user?.role.toLowerCase()}/travel/manage/my-travel-plans`)}
         >
           My Travel Plans
@@ -66,7 +67,7 @@ export default function ListTravelPlans() {
         />
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 justify-center">
         {filteredList.length > 0 ? (
           filteredList.map((item) => (
             <TravelCard

@@ -1,3 +1,26 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+/* Container width */
+::-webkit-scrollbar {
+    width: 6px; /* Slightly wider for usability */
+    height: 6px; /* For horizontal scroll */
+}
+
+/* The track (background) */
+::-webkit-scrollbar-track {
+    background: transparent; /* Makes it look modern */
+}
+
+/* The draggable part */
+::-webkit-scrollbar-thumb {
+    background: #bbb; /* Subtle grey */
+    border-radius: 10px; /* Fully rounded edges */
+    border: 1px solid transparent; /* Padding effect */
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #888; /* Darkens on hover */
+}

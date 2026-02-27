@@ -51,7 +51,7 @@ export default function ListGameSlots() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
         {gameSlots.data && gameSlots.data.length > 0 ? (
           gameSlots.data.map((slot) => (
-            <GameSlot key={slot.slotId} slot={slot} />
+            <GameSlot key={slot.slotId} slot={slot} disable={false} />
           ))
         ) : (
           <div className="flex items-center justify-center text-gray-400 col-span-3">
@@ -63,7 +63,13 @@ export default function ListGameSlots() {
   );
 }
 
-function GameSlot({ slot }: { slot: ISlots }) {
+export function GameSlot({
+  slot,
+  disable,
+}: {
+  slot: ISlots;
+  disable: boolean;
+}) {
   const isPast = new Date(slot.startTime) < new Date();
 
   const getStatusStyles = () => {
@@ -85,32 +91,26 @@ function GameSlot({ slot }: { slot: ISlots }) {
 
   const cardContent = (
     <Card
-      className={`p-5 rounded-xl shadow-md transition-all duration-200 
+      className={`p-4 rounded-xl shadow-md transition-all duration-200 
       ${
         isPast || slot.status === "LOCKED"
           ? "bg-gray-200 opacity-70"
           : "hover:shadow-xl hover:scale-[1.02] cursor-pointer"
       }`}
     >
-      <div className="text-center space-y-1">
+      <div className="text-center flex items-center justify-center gap-4">
         <p className="font-semibold text-gray-700">
-          {new Date(slot.startTime).toLocaleTimeString(
-            undefined,
-            DateOptions,
-          )}
+          {new Date(slot.startTime).toLocaleTimeString(undefined, DateOptions)}
         </p>
 
         <p className="text-gray-400 text-xs">to</p>
 
         <p className="font-semibold text-gray-700">
-          {new Date(slot.endTime).toLocaleTimeString(
-            undefined,
-            DateOptions,
-          )}
+          {new Date(slot.endTime).toLocaleTimeString(undefined, DateOptions)}
         </p>
       </div>
 
-      <div className="flex justify-center mt-4">
+      <div className="flex justify-center">
         <Badge
           className={`px-3 py-1 text-xs font-semibold border ${getStatusStyles()}`}
         >
@@ -120,5 +120,9 @@ function GameSlot({ slot }: { slot: ISlots }) {
     </Card>
   );
 
-  return <Link to={`book/${slot.slotId}`}>{cardContent}</Link>;
+  if (disable) {
+    return cardContent;
+  } else {
+    return <Link to={`book/${slot.slotId}`}>{cardContent}</Link>;
+  }
 }

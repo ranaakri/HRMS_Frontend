@@ -5,13 +5,17 @@ import { useDebounce } from "@/hook/DebounceHoot";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import ListAllPost from "./ListAllPost";
+
 
 export default function SearchByUsers() {
   const [search, setSearch] = useState("");
   const [userList, setUserList] = useState<IUserList[]>([]);
-  const navigate = useNavigate();
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState(new Date().toString());
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -27,36 +31,81 @@ export default function SearchByUsers() {
       .catch(() => notify.error("Error", "Failed to fetch users"));
   }, [debouncedSearch]);
 
-  const handleSearch = (userId: number) => {
-    setUserList([]);
+  const handleUserSelect = (user: IUserList) => {
+    setSelectedUserId(user.userId);
     setSearch("");
-    navigate(`./${userId}`);
+    setUserList([]);
   };
 
+  const handleClear = () => {
+    setSelectedUserId(null);
+    setSearch("");
+    setStartDate("");
+    setEndDate(new Date().toString());
+  };
+
+  const hasFilter =
+    selectedUserId !== null || startDate !== "" || endDate !== "";
+
   return (
-    <div className="">
-      <Input
-        placeholder="Search users..."
-        value={search}
-        className="bg-white"
-        onChange={(e) => setSearch(e.target.value)}
-      />
+    <div>
+      <div className="flex items-center min-w-2xl gap-4 justify-self-center">
+        <Input
+          placeholder="Search users..."
+          value={search}
+          className="bg-white"
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setSelectedUserId(null);
+          }}
+        />
+
+        <Input
+          type="date"
+          value={startDate}
+          className="bg-white"
+          onChange={(e) => setStartDate(e.target.value)}
+        />
+
+        <Input
+          type="date"
+          value={endDate}
+          className="bg-white"
+          onChange={(e) => setEndDate(e.target.value)}
+        />
+
+        <Button variant="outline" onClick={handleClear}>
+          Clear
+        </Button>
+      </div>
 
       {userList.map((user) => (
         <Card
           key={user.userId}
-          className="p-3 flex flex-row justify-between items-center bg-white my-2"
+          className="p-3 min-w-2xl flex flex-row justify-between justify-self-center items-center bg-white my-2"
         >
           <div>
             <p className="font-semibold">{user.name}</p>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
 
-          <Button onClick={() => handleSearch(user.userId)}>View Posts</Button>
+          <Button onClick={() => handleUserSelect(user)}>
+            Select
+          </Button>
         </Card>
       ))}
 
-      <Outlet />
+      {!hasFilter ? (
+        <ListAllPost myPost={false} deletedPost={false} />
+      ) : (
+        <ListAllPost
+          myPost={false}
+          deletedPost={false}
+          userIdFilter={selectedUserId}
+          startDate={startDate}
+          endDate={endDate}
+        />
+      )}
     </div>
   );
 }

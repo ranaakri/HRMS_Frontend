@@ -114,46 +114,62 @@ export default function CommentsDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="bg-white max-h-full overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Comments</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="bg-white w-full max-w-lg p-0 rounded-xl overflow-hidden">
+        <div className="flex flex-col max-h-[85vh]">
+          {/* Header */}
+          <DialogHeader className="px-6 py-4 border-b sticky top-0 bg-white z-10">
+            <DialogTitle className="text-lg font-semibold">
+              Comments
+            </DialogTitle>
+          </DialogHeader>
 
-        <div className="flex gap-4 mb-4">
-          <Input
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-            placeholder="Comment..."
-            maxLength={200}
-            required
-          />
-          <Button onClick={handleAdd} disabled={addComment.isPending}>
-            Send
-          </Button>
+          {/* Scrollable Comments Area */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+            {listOfComments.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-6">
+                No comments yet 💬
+              </p>
+            )}
+
+            {listOfComments.map((comment) => (
+              <CommentItem
+                key={comment.commentId}
+                comment={comment}
+                currentUserId={user?.userId}
+                onDelete={(commentId) =>
+                  deleteComment.mutate({
+                    commentedById: user!.userId,
+                    commentId,
+                  })
+                }
+                onDeleteAfterWarn={(commentId) => {
+                  queryClient.invalidateQueries({
+                    queryKey: ["comments", commentId],
+                  });
+                  onCommentCountChange(-1);
+                }}
+                onEdit={(data) => editComment.mutate(data)}
+              />
+            ))}
+          </div>
+
+          {/* Sticky Input Area */}
+          <div className="px-6 py-4 border-t bg-white sticky bottom-0">
+            <div className="flex gap-3">
+              <Input
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+                placeholder="Write a comment..."
+                maxLength={200}
+                required
+                className="flex-1"
+              />
+              <Button onClick={handleAdd} disabled={addComment.isPending}>
+                Send
+              </Button>
+            </div>
+          </div>
         </div>
-
-        {listOfComments.length === 0 && (
-          <p className="text-sm text-gray-500">No comments yet 💬</p>
-        )}
-
-        {listOfComments.map((comment) => (
-          <CommentItem
-            key={comment.commentId}
-            comment={comment}
-            currentUserId={user?.userId}
-            onDelete={(commentId) =>
-              deleteComment.mutate({
-                commentedById: user!.userId,
-                commentId,
-              })
-            }
-            onDeleteAfterWarn={(commentId) => {
-              queryClient.invalidateQueries({ queryKey: ["comments", commentId] });
-              onCommentCountChange(-1);
-            }}
-            onEdit={(data) => editComment.mutate(data)}
-          />
-        ))}
       </DialogContent>
     </Dialog>
   );
@@ -238,79 +254,80 @@ function CommentItem({
   };
 
   return (
-    <div className="border-b">
-      <div className="flex gap-3 py-3">
-        <img
-          src={comment.commentedBy.profileUrl}
-          className="w-8 h-8 rounded-full object-cover"
-        />
+    <div className="flex gap-3 p-3 rounded-lg hover:bg-gray-50 transition">
+      <img
+        src={comment.commentedBy.profileUrl}
+        alt={comment.commentedBy.name}
+        className="w-9 h-9 rounded-full object-cover"
+      />
 
-        <div className="flex-1">
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
           <p className="font-semibold text-sm">{comment.commentedBy.name}</p>
 
-          {isEditing ? (
-            <div className="flex gap-2 mt-1">
-              <Input
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                required
-              />
-              <Button size="sm" onClick={handleSave}>
-                Save
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-700">{comment.commentText}</p>
-          )}
-        </div>
-
-        {comment.commentedBy.userId === currentUserId && (
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              Edit
-            </Button>
-
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-red-500"
-              onClick={() => onDelete(comment.commentId)}
-            >
-              Delete
-            </Button>
-          </div>
-        )}
-        {user?.role === "HR" &&
-          comment.commentedBy.userId !== currentUserId && (
-            <div className="flex gap-2">
+          {comment.commentedBy.userId === currentUserId && (
+            <div className="flex gap-1">
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setIsWarning(!isWarning)}
+                onClick={() => setIsEditing(!isEditing)}
               >
-                Warn
+                Edit
+              </Button>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-red-500"
+                onClick={() => onDelete(comment.commentId)}
+              >
+                Delete
               </Button>
             </div>
           )}
-      </div>
+        </div>
 
-      {isWarning && (
-        <form className="flex gap-4 mb-2" onSubmit={() => handleWarningFn()}>
-          <Input
-            type="text"
-            required
-            placeholder="warning.."
-            onChange={(e) => setReason(e.target.value)}
-          />
-          <Button type="submit" className="bg-amber-400 text-white">
-            Warn & Delete
-          </Button>
-        </form>
-      )}
+        {isEditing ? (
+          <div className="flex gap-2 mt-2">
+            <Input
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              required
+            />
+            <Button size="sm" onClick={handleSave}>
+              Save
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-700 mt-1">{comment.commentText}</p>
+        )}
+
+        {user?.role === "HR" &&
+          comment.commentedBy.userId !== currentUserId && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="mt-2 text-amber-600"
+              onClick={() => setIsWarning(!isWarning)}
+            >
+              Warn
+            </Button>
+          )}
+
+        {isWarning && (
+          <form className="flex gap-2 mt-2" onSubmit={() => handleWarningFn()}>
+            <Input
+              type="text"
+              required
+              placeholder="Warning reason..."
+              onChange={(e) => setReason(e.target.value)}
+            />
+            <Button type="submit" className="bg-amber-400 text-white">
+              Warn & Delete
+            </Button>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

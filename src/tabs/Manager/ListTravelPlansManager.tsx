@@ -66,7 +66,7 @@ export default function ListTravelPlansManager() {
       </div>
 
       {filteredList.length > 0 ? (
-        <div className="grid gap-4">
+        <div className="grid gap-4 justify-center">
           {filteredList.map((item: any, index: number) => (
             <TravelCard
               myTarvelPlan={false}

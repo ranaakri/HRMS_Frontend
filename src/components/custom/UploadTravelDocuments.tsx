@@ -27,16 +27,13 @@ export default function UploadTravelDocuments() {
     queryKey: ["TravelingUsers"],
     queryFn: () =>
       api
-        .get<
-          TravelingUser[]
-        >(RouteList.travelingUsers + `/${travelId}`)
+        .get<TravelingUser[]>(RouteList.travelingUsers + `/${travelId}`)
         .then((res) => res.data),
   });
 
   useEffect(() => {
     if (data) setTravelingUsers(data);
   }, [data]);
-
 
   if (isLoading)
     return <div className="flex items-center justify-center">Loading....</div>;
@@ -57,7 +54,9 @@ export default function UploadTravelDocuments() {
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center text-gray-500">No Traveling Users</div>
+        <div className="flex items-center justify-center text-gray-500">
+          No Traveling Users
+        </div>
       )}
     </div>
   );
