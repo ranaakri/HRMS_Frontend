@@ -31,10 +31,10 @@ interface AddComment {
 }
 
 interface Props {
-  postId: number | null;
-  open: boolean;
-  setOpen: (val: boolean) => void;
-  onCommentCountChange: (delta: number) => void;
+  readonly postId: number | null;
+  readonly open: boolean;
+  readonly setOpen: (val: boolean) => void;
+  readonly onCommentCountChange: (delta: number) => void;
 }
 
 export default function CommentsDialog({
@@ -182,16 +182,16 @@ function CommentItem({
   onEdit,
   onDeleteAfterWarn,
 }: {
-  comment: CommentResponse;
-  currentUserId?: number;
-  onDelete: (commentId: number) => void;
-  onEdit: (data: {
+  readonly  comment: CommentResponse;
+  readonly currentUserId?: number;
+  readonly onDelete: (commentId: number) => void;
+  readonly  onEdit: (data: {
     commentId: number;
     editedBy: number;
     commentText: string;
     updatedAt: string;
   }) => void;
-  onDeleteAfterWarn: (commentId: number) => void;
+  readonly  onDeleteAfterWarn: (commentId: number) => void;
 }) {
   const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
@@ -232,12 +232,10 @@ function CommentItem({
       notify.success("Sent!!", "Comment warning sent sucessfully");
       onDeleteAfterWarn(comment.commentId);
       setIsWarning(false);
-      return;
     },
     onError: (error: any) => {
       console.error(error.response);
       notify.error("Error", error.response.data.message);
-      return;
     },
   });
 

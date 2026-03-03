@@ -10,15 +10,17 @@ import LikesDialog from "./LikeDialog";
 import CommentsDialog from "./CommentDialog";
 
 interface PostFetcherProps {
-  myPost: boolean;
-  deletedPost?: boolean;
-  userIdFilter?: number | null;
-  startDate?: string;
-  endDate?: string;
+  readonly myPost: boolean;
+  readonly deletedPost?: boolean;
+  readonly userIdFilter?: number | null;
+  readonly startDate?: string;
+  readonly endDate?: string;
+  readonly tags?: string | null;
 }
 
 export default function ListAllPost({
   myPost,
+  tags,
   deletedPost,
   userIdFilter,
   startDate,
@@ -46,6 +48,7 @@ export default function ListAllPost({
       startDate,
       endDate,
       user?.userId,
+      tags
     ],
     queryFn: async () => {
       let baseEndpoint = "";
@@ -56,6 +59,8 @@ export default function ListAllPost({
         baseEndpoint = `/api/post/warning/hr/${user?.userId}`;
       } else if (myPost) {
         baseEndpoint = `/post/my/${user?.userId}`;
+      } else if (tags) {
+        baseEndpoint = `/post/tags/${user?.userId}`;
       } else if (user?.role === "HR") {
         baseEndpoint = `/post/${user?.userId}`;
       } else {
@@ -66,8 +71,10 @@ export default function ListAllPost({
         page: page.toString(),
       });
 
-      if (startDate) params.append("startDate", new Date(startDate).toISOString());
+      if (startDate)
+        params.append("startDate", new Date(startDate).toISOString());
       if (endDate) params.append("endDate", new Date(endDate).toISOString());
+      if (tags) params.append("tag", tags);
 
       const res = await api.get(`${baseEndpoint}?${params.toString()}`);
       return res.data;
@@ -79,7 +86,7 @@ export default function ListAllPost({
     setPage(0);
     setPostData([]);
     setHasMore(true);
-  }, [userIdFilter, startDate, endDate, myPost, deletedPost]);
+  }, [userIdFilter, startDate, endDate, myPost, deletedPost, tags]);
 
   useEffect(() => {
     if (!loadPost.data) return;

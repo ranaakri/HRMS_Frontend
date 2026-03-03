@@ -16,6 +16,8 @@ export default function SearchByUsers() {
 
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState(new Date().toString());
+  const [tag, setTag] = useState("");
+  const [appliedTag, setAppliedTag] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -42,10 +44,20 @@ export default function SearchByUsers() {
     setSearch("");
     setStartDate("");
     setEndDate(new Date().toString());
+    setTag("");
+    setAppliedTag(null);
+  };
+
+  const handleTagSearch = () => {
+    if (tag && !tag.startsWith("#")) {
+      notify.error("Error", "Tags must start with #");
+      return;
+    }
+    setAppliedTag(tag);
   };
 
   const hasFilter =
-    selectedUserId !== null || startDate !== "" || endDate !== "";
+    selectedUserId !== null || startDate !== "" || endDate !== "" || appliedTag !== null;
 
   return (
     <div>
@@ -74,6 +86,17 @@ export default function SearchByUsers() {
           onChange={(e) => setEndDate(e.target.value)}
         />
 
+        <Input
+          placeholder="Search by tag..."
+          value={tag}
+          className="bg-white"
+          onChange={(e) => setTag(e.target.value)}
+        />
+
+        <Button onClick={handleTagSearch}>
+          Search Tag
+        </Button>
+
         <Button variant="outline" onClick={handleClear}>
           Clear
         </Button>
@@ -95,16 +118,17 @@ export default function SearchByUsers() {
         </Card>
       ))}
 
-      {!hasFilter ? (
-        <ListAllPost myPost={false} deletedPost={false} />
-      ) : (
+      {hasFilter ? (
         <ListAllPost
           myPost={false}
           deletedPost={false}
           userIdFilter={selectedUserId}
           startDate={startDate}
+          tags={appliedTag}
           endDate={endDate}
         />
+      ) : (
+        <ListAllPost myPost={false} deletedPost={false} />
       )}
     </div>
   );

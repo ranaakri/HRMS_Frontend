@@ -40,7 +40,11 @@ interface IUpdateJob {
   cvReviewersList: number[];
 }
 
-export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
+export default function UpdateJob({
+  isViewOnly,
+}: {
+  readonly isViewOnly: boolean;
+}) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [createJob, setCreateJob] = useState<IUpdateJob>();
@@ -78,7 +82,6 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
     } else {
       setUserList([]);
     }
-    return;
   };
 
   useEffect(() => {
@@ -94,7 +97,6 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
   });
 
   useEffect(() => {
-    console.log(data);
     if (data) {
       const payload: IUpdateJob = {
         title: data.title,
@@ -105,7 +107,6 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
         hrId: data.hrContact.userId,
         cvReviewersList: data.cvReviewers.map((item) => item.userId),
       };
-      console.log(data);
       setCreateJob(payload);
       setCvReviewersName(data.cvReviewers);
       setCvReviewers(data.cvReviewers.map((item) => item.userId));
@@ -121,9 +122,8 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
   } = useForm<IUpdateJob>({ values: createJob });
 
   const mutation = useMutation({
-    mutationFn: (data: IUpdateJob) => {
-      console.log(data);
-      return api
+    mutationFn: async (data: IUpdateJob) => {
+      return await api
         .put<JobResponse>(`/job/${jobId}`, data, { withCredentials: true })
         .then((res) => res.data);
     },
@@ -134,7 +134,7 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
 
     onError: (error: any) => {
       notify.error("Faild to update job details", error.response.data.message);
-      console.error(error.response)
+      console.error(error.response);
     },
   });
 
@@ -156,9 +156,6 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
       hrId: user?.userId,
     };
 
-    // const formData = new FormData();
-    // formData.append("jdFile", selectedFile);
-
     mutation.mutateAsync(finalData).then((data) => data.jobId);
   };
 
@@ -170,7 +167,7 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
         notify.success("Job deleted succesfully");
         navigate("/job", { replace: true });
       } catch (error: any) {
-        notify.error("Error",error.response.data.message);
+        notify.error("Error", error.response.data.message);
         console.error(error.response);
       }
     }
@@ -185,7 +182,7 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
   return (
     <Card className="bg-white border-0 rounded-md p-5 md:p-10">
       <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 bg-white">
-        Update Job Details
+        {isViewOnly ? "View " : "Update "} Job Details
       </h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -267,7 +264,7 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
           )}
         </div>
         <div className="">
-          <label>Status</label>
+          <label htmlFor="status">Status</label>
           <Controller
             name="status"
             control={control}
@@ -355,32 +352,33 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
             <div className="p-2 text-gray-500 font-semibold">CV Reviewers</div>
             <div className="flex gap-4">
               {cvReviewersName.map((data: any) => (
-                <div
-                  className="bg-gray-500 text-white p-2 px-4 rounded-md"
+                <button
+                  type="button"
+                  className="bg-gray-500 text-white p-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
                   key={data.userId}
                   onClick={() => {
                     setCvReviewers(
-                      cvReviewers.filter((item) => item != data.userId),
+                      cvReviewers.filter((item) => item !== data.userId),
                     );
                     setCvReviewersName(
                       cvReviewersName.filter(
-                        (item) => item.userId != data.userId,
+                        (item) => item.userId !== data.userId,
                       ),
                     );
                   }}
                 >
                   {data.name}
-                </div>
+                </button>
               ))}
             </div>
           </div>
         )}
-        {!isViewOnly&& (
+        {!isViewOnly && (
           <div className="">
             <Button
               variant={"outline"}
               className="bg-black cursor-pointer text-white hover:bg-gray-900"
-              disabled={mutation.isPending ? true : false}
+              disabled={mutation.isPending}
               type="submit"
             >
               Update
@@ -388,7 +386,7 @@ export default function UpdateJob({ isViewOnly }: { isViewOnly: boolean }) {
             <Button
               variant={"outline"}
               className="bg-red-500 cursor-pointer text-white hover:bg-red-700"
-              disabled={mutation.isPending ? true : false}
+              disabled={mutation.isPending}
               onClick={handleDelete}
               type="button"
             >
@@ -412,9 +410,9 @@ function UploadJdFile({
   jdPath,
   isViewOnly,
 }: {
-  jobId: number;
-  jdPath: string | undefined;
-  isViewOnly: boolean;
+  readonly jobId: number;
+  readonly jdPath: string | undefined;
+  readonly isViewOnly: boolean;
 }) {
   const [selectedFile, setSelectedFile] = useState<File | null>();
   const [jdFile, setJdFile] = useState<string | null>();
@@ -431,7 +429,6 @@ function UploadJdFile({
 
   const mutation = useMutation({
     mutationFn: (data: FormData) => {
-      console.log("request data", data);
       return api
         .post<string>("/job/jd/" + jobId, data, {
           withCredentials: true,
@@ -445,8 +442,11 @@ function UploadJdFile({
     },
 
     onError: (error: any) => {
-      notify.error("Faild to add job description file", error.response.data.message);
-      console.error(error.response)
+      notify.error(
+        "Faild to add job description file",
+        error.response.data.message,
+      );
+      console.error(error.response);
     },
   });
 
@@ -467,7 +467,9 @@ function UploadJdFile({
   return (
     <div className="">
       <div className="">
-        {!isViewOnly && <label>Update Job Descrition file</label>}
+        {!isViewOnly && (
+          <label>{isViewOnly ? "View " : "Update "} Job Descrition file</label>
+        )}
         {!isViewOnly && (
           <div className="flex gap-2 items-center">
             <Input type="file" required onChange={handleFileChange} />
@@ -475,7 +477,7 @@ function UploadJdFile({
               variant={"default"}
               className="bg-black text-white cursor-pointer"
               onClick={handleFileUpload}
-              disabled={mutation.isPending ? true : false}
+              disabled={mutation.isPending}
             >
               Upload
             </Button>

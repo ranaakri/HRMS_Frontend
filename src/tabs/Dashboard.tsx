@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
-import { Briefcase, Settings, ClipboardList } from "lucide-react";
+import { Menu,Briefcase, Settings, ClipboardList } from "lucide-react";
 import Logo from "../assets/images/image.png";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
@@ -154,7 +153,6 @@ export default function Dashboard() {
     }
   };
 
-  console.log(new Date("2026-02-10 11:30:00.2600000 +00:00").toISOString())
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -171,6 +169,7 @@ export default function Dashboard() {
                   ? user.profileUrl
                   : "https://betterwaterquality.com/wp-content/uploads/2020/09/dummy-profile-pic-300x300-1-1.png"
               }
+              alt="no data"
               className="w-20 h-20 rounded-full object-cover"
             />
             <div>{user?.name}</div>
@@ -199,7 +198,7 @@ export default function Dashboard() {
       </aside>
 
       {sidebarOpen && (
-        <div
+        <button
           className="fixed inset-0 bg-black/40 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -216,7 +215,7 @@ export default function Dashboard() {
               <Menu className="w-6 h-6" />
             </Button>
 
-            <img src={Logo} className="h-8 hidden md:block" />
+            <img alt="no data" src={Logo} className="h-8 hidden md:block" />
           </div>
 
           <div className="flex items-center gap-4">

@@ -216,11 +216,11 @@ export default function CreatePost() {
 
         {postType === "Image" && (
           <div className="space-y-4">
-            <label className="block text-sm text-gray-500">
+            <label htmlFor="uploadimg" className="block text-sm text-gray-500">
               Upload Image
             </label>
 
-            <Input type="file" onChange={handleFileChange} />
+            <Input type="file" id="uploadimg" onChange={handleFileChange} />
 
             {previewUrl && (
               <div className="rounded-xl overflow-hidden border bg-gray-100">
@@ -246,8 +246,7 @@ export default function CreatePost() {
                 type="checkbox"
                 checked={emp}
                 onChange={() => setEmp(!emp)}
-              />
-              Employee
+              />Employee
             </label>
 
             <label className="flex items-center gap-2 cursor-pointer">
@@ -255,8 +254,7 @@ export default function CreatePost() {
                 type="checkbox"
                 checked={manager}
                 onChange={() => setManager(!manager)}
-              />
-              Manager
+              />Manager
             </label>
           </div>
         </div>

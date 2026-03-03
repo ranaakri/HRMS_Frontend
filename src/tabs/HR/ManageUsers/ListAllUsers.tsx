@@ -3,6 +3,7 @@ import type { ApiError } from "@/api/axiosError";
 import { notify } from "@/components/custom/Notification";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useConfirm } from "@/hooks/usecontirm";
 import InfiniteScroll from "@/tabs/Post/InfiniteScroll";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -35,29 +36,31 @@ interface IDepartments {
 export default function ListAllUsers() {
   const navigate = useNavigate();
 
+  const { confirm, ConfirmComponent } = useConfirm();
+
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [usersList, setUserList] = useState<Users[]>([]);
+  const [usersList, setUsersList] = useState<Users[]>([]);
   const [department, setDepartment] = useState<number | null>(null);
 
   const queryClient = useQueryClient();
 
   useEffect(() => {
     setPage(0);
-    setUserList([]);
+    setUsersList([]);
     setHasMore(true);
   }, [department]);
 
   const usersListQuery = useQuery<Users[]>({
     queryKey: ["ListAllUsers", department, page],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("pageSize", "10");
       if (department !== 0 && department !== null) {
         params.append("department", department.toString());
       }
-      return api.get(`/users/list/all?${params}`).then((res) => res.data) || [];
+      return await api.get(`/users/list/all?${params}`).then((res) => res.data) || [];
     },
   });
 
@@ -83,20 +86,43 @@ export default function ListAllUsers() {
       queryClient.invalidateQueries({
         queryKey: ["ListAllUsers"],
       });
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
-      return;
     },
   });
+
+  const deleteUser = useMutation({
+    mutationFn: async (userId: number) => {
+      return await api.delete(`/users/${userId}`).then((res) => res.data);
+    },
+    onSuccess: () => {
+      notify.success("User deleted successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["ListAllUsers"],
+      });
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+    },
+  });
+
+  const handleDeleteUser = async (userId: number) => {
+    const res = await confirm("Are you sure you want to delete this user?");
+    if (res) {
+      deleteUser.mutate(userId);
+    }
+  };
 
   useEffect(() => {
     if (!usersListQuery.data) return;
     if (usersListQuery.data.length < 10) setHasMore(false);
-    
-    setUserList((prev) => (page === 0 ? usersListQuery.data : [...prev, ...usersListQuery.data]));
+
+    setUsersList((prev) =>
+      page === 0 ? usersListQuery.data : [...prev, ...usersListQuery.data],
+    );
   }, [usersListQuery.data, page]);
 
   const loadMore = () => {
@@ -114,7 +140,12 @@ export default function ListAllUsers() {
     return (
       <Card className="md:p-10 p-5 bg-white rounded-md shadow-md border-0">
         <div className="felx">
-          <Link to={"add"} className="justify-self-end text-white bg-black rounded-md p-2 px-4">+ Add User</Link>
+          <Link
+            to={"add"}
+            className="justify-self-end text-white bg-black rounded-md p-2 px-4"
+          >
+            + Add User
+          </Link>
         </div>
         <div className="">
           <div className="">
@@ -141,84 +172,94 @@ export default function ListAllUsers() {
             Loading...
           </div>
         ) : (
-        <InfiniteScroll
-          data={usersList}
-          hasMore={hasMore}
-          isLoading={usersListQuery.isLoading}
-          loadMore={loadMore}
-          message="No more Users"
-          renderItem={(item: Users) => (
-            <div className="border p-5 my-4 rounded-md">
-              <div className="grid grid-cols-1 md:grid-cols-3">
-                <div className="flex gap-4 items-center">
-                  <div className="">
-                    <img
-                      src={item.profileUrl}
-                      className="rounded-full w-25 h-25 object-cover"
-                    />
+          <InfiniteScroll
+            data={usersList}
+            hasMore={hasMore}
+            isLoading={usersListQuery.isLoading}
+            loadMore={loadMore}
+            message="No more Users"
+            renderItem={(item: Users) => (
+              <div className="border p-5 my-4 rounded-md">
+                <div className="grid grid-cols-1 md:grid-cols-3">
+                  <div className="flex gap-4 items-center">
+                    <div className="">
+                      <img
+                        src={item.profileUrl}
+                        alt="no data"
+                        className="rounded-full w-25 h-25 object-cover"
+                      />
+                    </div>
+                    <div className="">
+                      <p className="text-xl font-semibold">{item.name}</p>
+                      <p className="">{item.email}</p>
+                      <p className="">{item.designation}</p>
+                    </div>
                   </div>
-                  <div className="">
-                    <p className="text-xl font-semibold">{item.name}</p>
-                    <p className="">{item.email}</p>
-                    <p className="">{item.designation}</p>
+                  <div className="flex items-center">
+                    <div className="">
+                      <p className="">
+                        <b>Birth date: </b>
+                        {new Date(item.birthdate).toLocaleString(
+                          undefined,
+                          BirthDateOptions,
+                        )}
+                      </p>
+                      <p className="">
+                        <b>Joining date: </b>
+                        {new Date(item.joiningDate).toLocaleString(
+                          undefined,
+                          BirthDateOptions,
+                        )}
+                      </p>
+                      <p className="">{item.active ? "Active" : "Blocked"}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <div className="">
-                    <p className="">
-                      <b>Birth date: </b>
-                      {new Date(item.birthdate).toLocaleString(
-                        undefined,
-                        BirthDateOptions,
-                      )}
-                    </p>
-                    <p className="">
-                      <b>Joining date: </b>
-                      {new Date(item.joiningDate).toLocaleString(
-                        undefined,
-                        BirthDateOptions,
-                      )}
-                    </p>
-                    <p className="">{item.active ? "Active" : "Blocked"}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-self-end gap-4">
-                <Button
-                  className="bg-gray-500 text-white"
-                  onClick={() => navigate(`update/${item.userId}`)}
-                >
-                  Update
-                </Button>
-                {item.active ? (
-                  <Button
-                    className="bg-black text-white"
-                    onClick={async () =>
-                      await userStatus.mutateAsync({
-                        userId: item.userId,
-                        status: false,
-                      })
-                    }
-                  >
-                    Block
-                  </Button>
-                ) : (
+                <div className="flex justify-self-end gap-4">
                   <Button
                     className="bg-gray-500 text-white"
-                    onClick={async () =>
-                      await userStatus.mutateAsync({
-                        userId: item.userId,
-                        status: true,
-                      })
-                    }
+                    onClick={() => navigate(`update/${item.userId}`)}
                   >
-                    Unblock
+                    Update
                   </Button>
-                )}
+
+                  <Button
+                    className="bg-red-500 text-white"
+                    onClick={() => handleDeleteUser(item.userId)}
+                  >
+                    Remove
+                  </Button>
+                  {item.active ? (
+                    <Button
+                      className="bg-black text-white"
+                      onClick={async () =>
+                        await userStatus.mutateAsync({
+                          userId: item.userId,
+                          status: false,
+                        })
+                      }
+                    >
+                      Block
+                    </Button>
+                  ) : (
+                    <Button
+                      className="bg-gray-500 text-white"
+                      onClick={async () =>
+                        await userStatus.mutateAsync({
+                          userId: item.userId,
+                          status: true,
+                        })
+                      }
+                    >
+                      Unblock
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        />)}
+            )}
+          />
+        )}
+        {ConfirmComponent}
       </Card>
     );
   }

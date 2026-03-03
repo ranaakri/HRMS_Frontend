@@ -58,14 +58,14 @@ export default function OrganizationChart() {
 
       <div className="flex flex-col items-center">
         {list.map((item) => (
-          <div
+          <button
             className="cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => setSelectedUserId(item.userId)}
             key={item.userId}
           >
             <HirarchyCard item={item} isMe={item.userId === selectedUserId} />
             <div className="text-center text-blue-500">|</div>
-          </div>
+          </button>
         ))}
 
         {selectedUserId && (

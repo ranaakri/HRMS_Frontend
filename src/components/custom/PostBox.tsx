@@ -54,13 +54,13 @@ export default function PostBox({
   onWarnRequest,
   mypost,
 }: {
-  post: PostResponse;
-  onOpenLikes: (id: number) => void;
-  onOpenComments: (id: number) => void;
-  onCommentCountChange?: (delta: number) => void;
-  onDelete?: (postId: number) => void;
-  onWarnRequest?: (postId: number) => void;
-  mypost: boolean;
+  readonly post: PostResponse;
+  readonly onOpenLikes: (id: number) => void;
+  readonly onOpenComments: (id: number) => void;
+  readonly onCommentCountChange?: (delta: number) => void;
+  readonly onDelete?: (postId: number) => void;
+  readonly onWarnRequest?: (postId: number) => void;
+  readonly mypost: boolean;
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -245,21 +245,21 @@ export default function PostBox({
               className={isLiked ? "text-red-500" : ""}
               onClick={handleLike}
             />
-            <p
+            <button
               onClick={() => onOpenLikes(post.postId)}
               className={isLiked ? "text-red-500" : ""}
             >
               {likeCounts}
-            </p>
+            </button>
           </div>
 
-          <div
+          <button
             className="flex items-center gap-2 cursor-pointer hover:text-blue-500 transition"
             onClick={() => onOpenComments(post.postId)}
           >
             <FaComment />
             {commentCounts}
-          </div>
+          </button>
         </div>
       </div>
     </div>

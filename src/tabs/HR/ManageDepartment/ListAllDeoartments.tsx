@@ -31,7 +31,7 @@ interface IAddDepartment {
 
 export default function ListAllDepartments() {
   const [search, setSearch] = useState<string>("");
-  const [departmentList, setDepartment] = useState<IDepartments[]>([]);
+  const [departmentList, setDepartmentList] = useState<IDepartments[]>([]);
 
   const departmentQuery = useQuery<IDepartments[], ApiError>({
     queryKey: ["fetchAllDepartments"],
@@ -40,13 +40,13 @@ export default function ListAllDepartments() {
 
   useEffect(() => {
     if (search.length > 0) {
-      setDepartment(
+      setDepartmentList(
         departmentList.filter((item) =>
           item.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
         ),
       );
-    } else {
-      if (departmentQuery.data) setDepartment(departmentQuery.data);
+    } else if (departmentQuery.data) {
+       setDepartmentList(departmentQuery.data);
     }
   }, [search, departmentQuery.data]);
 
@@ -55,7 +55,7 @@ export default function ListAllDepartments() {
       return api.delete(`/department/${departmentId}`).then((res) => res.data);
     },
     onSuccess: (_, departmentId) => {
-      setDepartment(
+      setDepartmentList(
         departmentList.filter((item) => item.departmentId !== departmentId),
       );
       notify.success("Department deleted successfully");
@@ -73,7 +73,7 @@ export default function ListAllDepartments() {
         .then((res) => res.data);
     },
     onSuccess: (_, data) => {
-      setDepartment(
+      setDepartmentList(
         departmentList.map((item) =>
           item.departmentId === data.departmentId ? data : item,
         ),
@@ -92,7 +92,7 @@ export default function ListAllDepartments() {
     },
     onSuccess: (data) => {
       notify.success("Department added successfully");
-      setDepartment([...departmentList, data]);
+      setDepartmentList([...departmentList, data]);
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
@@ -131,9 +131,9 @@ function DepartmentCommponent({
   deleteDepartment,
   updateDepartment,
 }: {
-  item: IDepartments;
-  deleteDepartment: any;
-  updateDepartment: any;
+  readonly item: IDepartments;
+  readonly deleteDepartment: any;
+  readonly updateDepartment: any;
 }) {
   const [isUpdate, setUpdate] = useState(false);
   const [data, setData] = useState<IDepartments>(item);
@@ -197,9 +197,9 @@ function DepartmentCommponent({
   );
 }
 
-function AddDepartment({ addDepartment }: { addDepartment: any }) {
-  const [name, setDepartmentName] = useState<string>("");
-  const [description, setDepartmentDescription] = useState<string>("");
+function AddDepartment({ addDepartment }: { readonly addDepartment: any }) {
+  const [departmentName, setDepartmentName] = useState<string>("");
+  const [departmentDesciption, setDepartmentDesciption] = useState<string>("");
 
   return (
     <Dialog>
@@ -226,7 +226,7 @@ function AddDepartment({ addDepartment }: { addDepartment: any }) {
             id="descrption"
               placeholder="Brief description of the department"
             required
-            onChange={(e) => setDepartmentDescription(e.target.value)}
+            onChange={(e) => setDepartmentDesciption(e.target.value)}
           />
           </div>
         </div>
@@ -238,8 +238,8 @@ function AddDepartment({ addDepartment }: { addDepartment: any }) {
             className="bg-black text-white"
               onClick={async () =>
                 await addDepartment.mutateAsync({
-                  name: name,
-                  description: description,
+                  name: departmentName,
+                  description: departmentDesciption,
                 })
               }
             >

@@ -18,9 +18,9 @@ export default function LikesDialog({
   open,
   setOpen,
 }: {
-  postId: number | null;
-  open: boolean;
-  setOpen: (val: boolean) => void;
+  readonly postId: number | null;
+  readonly open: boolean;
+  readonly setOpen: (val: boolean) => void;
 }) {
   const likesQuery = useQuery({
     queryKey: ["likes", postId],

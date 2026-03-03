@@ -19,7 +19,7 @@ const UnauthorizedPage = () => {
 
         <div className="mt-10 flex gap-4 justify-center">
           <button
-            onClick={() => window.history.back()}
+            onClick={() => globalThis.history.back()}
             className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-300 ease-in-out shadow-lg shadow-blue-200"
           >
             Go Back

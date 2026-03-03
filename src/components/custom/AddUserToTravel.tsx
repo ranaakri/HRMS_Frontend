@@ -130,7 +130,7 @@ export default function AddUserToTravel() {
 function UpdateTravelingUsers() {
   const { travelId } = useParams();
 
-  const {confirm, ConfirmComponent} = useConfirm();
+  const { confirm, ConfirmComponent } = useConfirm();
 
   const [travelingUsersData, setTravelingUsersData] = useState<
     ITravelingUser[]
@@ -195,9 +195,10 @@ function UpdateTravelingUsers() {
         );
         return;
       }
-      const res = await confirm("Are you sure you want to remove traveling user");
-      if(!res)
-        return
+      const res = await confirm(
+        "Are you sure you want to remove traveling user",
+      );
+      if (!res) return;
       return api.delete(`/travel/traveling-user/${travelingUserId}`);
     },
     onSuccess: () => {
@@ -233,13 +234,19 @@ function UpdateTravelingUsers() {
   return (
     <Card className="bg-white p-5 md:p-10 border-0 shadow-md grid grid-cols-3 gap-4">
       {travelingUsersData.map((item) => (
-        <div className="border p-5 rounded flex gap-y-2 flex-col">
+        <div
+          className="border p-5 rounded flex gap-y-2 flex-col"
+          key={item.travelingUserId}
+        >
           <div className="">
             <p className="text-gray-800 text-xl">{item.user.name}</p>
           </div>
           <div className="flex gap-4 items-center">
-            <label className="text-gray-500">Balance:</label>
+            <label className="text-gray-500" htmlFor="balance">
+              Balance:
+            </label>
             <Input
+              id="balance"
               type="number"
               min={0}
               value={item.travelBalance}
@@ -271,7 +278,12 @@ function UpdateTravelingUsers() {
             </Button>
             <Button
               className="bg-red-400 text-white border-red-700"
-              onClick={() => removeMutation.mutate({travelingUserId: item.travelingUserId, usedBalance: item.usedBalance})}
+              onClick={() =>
+                removeMutation.mutate({
+                  travelingUserId: item.travelingUserId,
+                  usedBalance: item.usedBalance,
+                })
+              }
               disabled={removeMutation.isPending}
             >
               {removeMutation.isPending ? "Removing..." : "Remove"}

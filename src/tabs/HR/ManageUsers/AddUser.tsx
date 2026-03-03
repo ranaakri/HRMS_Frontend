@@ -1,9 +1,12 @@
 import api from "@/api/api";
 import type { ApiError } from "@/api/axiosError";
 import { notify } from "@/components/custom/Notification";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hook/DebounceHoot";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 export interface CreateUser {
@@ -15,6 +18,7 @@ export interface CreateUser {
   birthdate: string;
   departmentId: number;
   roleId: number;
+  assignUnderId: number;
   birthDate: string;
 }
 
@@ -27,6 +31,12 @@ interface IDepartments {
   departmentId: number;
   name: string;
   description: string;
+}
+
+export interface IUserList {
+  userId: number;
+  name: string;
+  email: string;
 }
 
 function generateSecurePassword(length = 10) {
@@ -45,6 +55,8 @@ function generateSecurePassword(length = 10) {
 }
 
 export default function AddUser() {
+  const [assignedUnder, setAssignedUnder] = useState<number | null>(null);
+
   const departmentQuery = useQuery<IDepartments[], ApiError>({
     queryKey: ["fetchAllDepartments"],
     queryFn: () => api.get(`/department/list`).then((res) => res.data),
@@ -82,8 +94,13 @@ export default function AddUser() {
   });
 
   const onSubmit = (data: CreateUser) => {
+    if (assignedUnder === null) {
+      notify.error("Error", "Please select a user to assign under");
+      return;
+    }
     updateMutation.mutate({
       ...data,
+      assignUnderId: assignedUnder,
       password: generateSecurePassword(),
     });
   };
@@ -208,7 +225,10 @@ export default function AddUser() {
             ))}
           </select>
         </div>
-        <div className=""></div>
+        <div className="col-span-2">
+          <div className="text-gray-500 items-center justify-center text-xl mb-2">Assign Under</div>
+          <AddAssignedUnder setAssignedUnder={setAssignedUnder} />
+        </div>
         <div className="">
           <button
             type="submit"
@@ -220,5 +240,73 @@ export default function AddUser() {
         </div>
       </form>
     </Card>
+  );
+}
+
+function AddAssignedUnder({
+  setAssignedUnder,
+}: {
+  readonly setAssignedUnder: React.Dispatch<React.SetStateAction<number | null>>;
+}) {
+  const [search, setSearch] = useState("");
+  const [userList, setUserList] = useState<IUserList[]>([]);
+  const [selectedUser, setSelectedUser] = useState<IUserList | null>(null);
+
+  const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (search.length < 2) {
+      setUserList([]);
+      return;
+    }
+
+    api
+      .get(`/users/list?name=${debouncedSearch}`)
+      .then((res) => setUserList(res.data))
+      .catch(() => notify.error("Error", "Failed to fetch users"));
+  }, [debouncedSearch]);
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Search users..."
+        value={search}
+        className="bg-white"
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {userList.map((user) => (
+        <Card
+          key={user.userId}
+          className="p-3 flex flex-row justify-between items-center bg-white "
+        >
+          <div>
+            <p className="font-semibold">{user.name}</p>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+
+          <Button
+            className="bg-black text-white"
+            onClick={() => {
+              setAssignedUnder(user.userId);
+              setSelectedUser(user);
+              setSearch("")
+            }}
+            type="button"
+          >
+            Select
+          </Button>
+        </Card>
+      ))}
+      {selectedUser && (
+        <div className="">
+          
+          <div className="flex p-4 gap-4 border-0 mt-4 bg-gray-100 rounded-md">
+            <p>{selectedUser.name}</p>
+            <p>{selectedUser.email}</p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

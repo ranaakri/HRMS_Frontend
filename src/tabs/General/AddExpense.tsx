@@ -59,7 +59,7 @@ interface ExpensesSplit {
   travelingUserId: number;
 }
 
-interface inputData {
+interface InputData {
   amount: number;
   category: string;
   expenseDate: string;
@@ -69,7 +69,7 @@ export default function AddExpense() {
   const { user } = useAuth();
   const { travelId } = useParams();
   const [date, setDate] = useState<Date>(new Date());
-  const [usersList, setUserList] = useState<ITravelingUser[]>([]);
+  const [usersList, setUsersList] = useState<ITravelingUser[]>([]);
   const [sharingExpense, setSharingExpense] = useState<TravelingUser[]>([]);
   const [splitAmount, setSplitAmount] = useState(0);
 
@@ -91,7 +91,7 @@ export default function AddExpense() {
 
   useEffect(() => {
     if (data) {
-      setUserList(data.filter((item) => item.user.userId !== user?.userId));
+      setUsersList(data.filter((item) => item.user.userId !== user?.userId));
       const me = data.filter((item) => item.user.userId === user?.userId);
       setSharingExpense(me);
     }
@@ -102,7 +102,7 @@ export default function AddExpense() {
     handleSubmit,
     control,
     formState: { errors },
-  } = useForm<inputData>();
+  } = useForm<InputData>();
 
   const addExpense = useMutation({
     mutationFn: async (data: Expense) => {
@@ -111,12 +111,10 @@ export default function AddExpense() {
 
     onSuccess: () => {
       notify.success("Success", "Expense Added Successfully");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
-      return;
     },
   });
 
@@ -133,11 +131,10 @@ export default function AddExpense() {
     onError: (error: any) => {
       notify.success("Error", error.response.data.message);
       console.error(error.cause);
-      return;
     },
   });
 
-  const onSubmit = async (data: inputData) => {
+  const onSubmit = async (data: InputData) => {
     if (!user) {
       notify.error("Logged out", "Please login again");
       return;
@@ -166,8 +163,8 @@ export default function AddExpense() {
 
     const formData = new FormData();
 
-    for (let i = 0; i < selectedFile.length; i++) {
-      formData.append("files", selectedFile[i]);
+    for (const element of selectedFile) {
+      formData.append("files", element);
     }
 
     let publicIds;
@@ -185,8 +182,6 @@ export default function AddExpense() {
         expenseProof: publicIds,
       };
 
-      console.log(payload);
-
       await addExpense.mutateAsync(payload);
     } catch (error: any) {
       notify.error("Error", "Error in adding expense");
@@ -199,11 +194,7 @@ export default function AddExpense() {
   };
 
   const handleAddSplit = (item: ITravelingUser) => {
-    console.log(
-      "Balance: ",
-      item.travelBalance - item.usedBalance <
-        splitAmount / (sharingExpense.length + 1),
-    );
+
     if (
       item.travelBalance - item.usedBalance <
       splitAmount / (sharingExpense.length + 1)
@@ -216,7 +207,7 @@ export default function AddExpense() {
       return;
     }
     setSharingExpense([...sharingExpense, item]);
-    setUserList(
+    setUsersList(
       usersList.filter((data) => data.user.userId != item.user.userId),
     );
   };
@@ -309,14 +300,14 @@ export default function AddExpense() {
           )}
         </div>
         <div className="col-span-2">
-          <label>Add Expense Proof</label>
+          <label htmlFor="proof">Add Expense Proof</label>
           <div className="flex gap-4">
-            <Input type="file" onChange={handleFileChange} required />
+            <Input type="file" id="proof" onChange={handleFileChange} required />
           </div>
           <div className="">
             {selectedFile.length > 0 &&
               selectedFile.map((item, index) => (
-                <div className="" key={index}>
+                <div className="" key={item.name+index}>
                   {item.name}
                 </div>
               ))}
@@ -326,7 +317,7 @@ export default function AddExpense() {
           <Button
             className="bg-black text-white"
             disabled={
-              addExpense.isPending || addMultipleFiles.isPending ? true : false
+              addExpense.isPending || addMultipleFiles.isPending
             }
           >
             Add Expense
@@ -364,8 +355,6 @@ export default function AddExpense() {
               onClick={() => handleAddSplit(item)}
               disabled={
                 addExpense.isPending || addMultipleFiles.isPending
-                  ? true
-                  : false
               }
             >
               Add

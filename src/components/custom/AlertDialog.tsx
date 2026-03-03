@@ -9,9 +9,9 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface Props{
-  open: boolean;
-  message: string;
-  onClose: (reslt: boolean) => void;
+  readonly open: boolean;
+  readonly message: string;
+  readonly onClose: (reslt: boolean) => void;
 }
 
 export function AlertDialogBasic ({open,message, onClose}: Props) {

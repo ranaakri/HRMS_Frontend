@@ -15,15 +15,19 @@ export default function ListTravelPlansManager() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
+  const [page, setPage] = useState(0);
+
   const {
     data: travelPlans = [],
     isLoading,
     error,
   } = useQuery<TravelPlanResponse[]>({
-    queryKey: ["list"],
+    queryKey: ["list", page],
     queryFn: () =>
       api
-        .get(RouteList.listTravelPlans, { withCredentials: true })
+        .get(RouteList.listTravelPlans + "?page=" + page, {
+          withCredentials: true,
+        })
         .then((res) => res.data.data),
   });
 
@@ -40,38 +44,55 @@ export default function ListTravelPlansManager() {
     return <div className="p-10 text-red-500">Error: {error.message}</div>;
 
   return (
-    <div className="container p-4">
-      <div className="ml-4 flex gap-4 mb-6">
-        <Button
-          variant={"outline"}
-          className="cursor-pointer"
-          onClick={() =>
-            navigate(
-              `/${user?.role.toLocaleLowerCase()}/travel/manage/my-travel-plans`,
-            )
-          }
-        >
-          My Travel Plans
-        </Button>
+    <div className="">
+      <div className="flex justify-between">
+        <div className="ml-4 flex gap-4 mb-6">
+          <Button
+            variant={"outline"}
+            className="cursor-pointer bg-gray-500 text-white"
+            onClick={() =>
+              navigate(
+                `/${user?.role.toLocaleLowerCase()}/travel/manage/my-travel-plans`,
+              )
+            }
+          >
+            My Travel Plans
+          </Button>
+        </div>
+        <div className="ml-4 mb-4 flex items-center gap-4">
+          <Button
+            onClick={() => setPage(Math.max(0, page - 1))}
+            disabled={page === 0}
+          >
+            Prev
+          </Button>
+          <span className="text-sm font-medium">Page {page + 1}</span>
+          <Button
+            onClick={() => setPage(page + 1)}
+            disabled={travelPlans.length < 10}
+          >
+            Next
+          </Button>
+        </div>
       </div>
 
       <div className="ml-4 mb-8 max-w-xl">
-        <Input 
-          type="text" 
-          className="bg-white" 
-          placeholder="Search by title..." 
+        <Input
+          type="text"
+          className="bg-white"
+          placeholder="Search by title..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)} 
+          onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
       {filteredList.length > 0 ? (
-        <div className="grid gap-4 justify-center">
+        <div className="grid gap-4">
           {filteredList.map((item: any, index: number) => (
             <TravelCard
               myTarvelPlan={false}
               details={item}
-              key={index}
+              key={index + ""}
               expense={false}
             />
           ))}

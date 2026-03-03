@@ -3,10 +3,17 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Card } from "../../components/ui/card";
 import { Commet } from "react-loading-indicators";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/api/api";
 
 const Logout = () => {
   const navigate = useNavigate();
   const { setLoggedin } = useAuth();
+
+  useQuery({
+    queryKey: ["logout"],
+    queryFn: () => api.get("/auth/logout").then((res) => res.data),
+  });
 
   useEffect(() => {
     document.cookie =

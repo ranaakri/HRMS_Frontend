@@ -3,7 +3,7 @@ import { FaHeart } from "react-icons/fa";
 export function LikeAnimationLayer({
   likes,
 }: {
-  likes: { id: number; x: number; y: number }[];
+  readonly likes: { id: number; x: number; y: number }[];
 }) {
   return (
     <>

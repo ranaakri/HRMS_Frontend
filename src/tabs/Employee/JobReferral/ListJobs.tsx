@@ -81,7 +81,7 @@ const ShareJobAction = ({
 
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
-      console.error(error.response)
+      console.error(error.response);
     },
   });
 
@@ -177,7 +177,7 @@ const ReferrJobAcction = ({
 
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
-      console.error("Error", error.response)
+      console.error("Error", error.response);
     },
   });
 
@@ -193,7 +193,7 @@ const ReferrJobAcction = ({
 
     onError: (error: any) => {
       notify.error("Error while uploading CV", error.response.data.message);
-      console.error(error.response)
+      console.error(error.response);
     },
   });
 
@@ -354,7 +354,10 @@ export default function ListJobsEmployee() {
       cell: ({ row }) => {
         return (
           <div className="">
-            {new Date(row.original.lastApplicationDate).toLocaleDateString(undefined, DateOptions)}
+            {new Date(row.original.lastApplicationDate).toLocaleDateString(
+              undefined,
+              DateOptions,
+            )}
           </div>
         );
       },
@@ -423,6 +426,14 @@ export default function ListJobsEmployee() {
         >
           My Shares
         </Link>
+        {user?.role !== "HR" && (
+          <Link
+            to={"cv-reviews"}
+            className="p-2 px-4 rounded-md bg-black text-white"
+          >
+            Review CV
+          </Link>
+        )}
       </div>
       <DataTable
         columns={column}

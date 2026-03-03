@@ -12,6 +12,18 @@ import type { User } from "../General/ExpenseList";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { type CreatedByUser } from "../HR/UpdateTravel";
+import type { ApiError } from "@/api/axiosError";
+
+export interface IGameStatus {
+  requestBy: RequestBy;
+  status: string;
+}
+
+export interface RequestBy {
+  email: string;
+  name: string;
+  userId: number;
+}
 
 const DateOptions: Intl.DateTimeFormatOptions = {
   timeZone: "Asia/Kolkata",
@@ -50,7 +62,7 @@ export default function BookSlot() {
 
   const { user } = useAuth();
 
-  const [listbool, updateBookingList] = useState(false);
+  const [listbool, setListbool] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["game", gameId],
@@ -77,7 +89,7 @@ export default function BookSlot() {
 
   const hasBooking = checkBooking.data;
 
-  const getStatus = useQuery({
+  const getStatus = useQuery<IGameStatus, ApiError>({
     queryKey: ["checkhasBooking", user?.userId, slotId, hasBooking, listbool],
     queryFn: async () => {
       return await api
@@ -120,12 +132,10 @@ export default function BookSlot() {
     },
     onSuccess: () => {
       notify.success("Booking request deleted");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
-      return;
     },
   });
 
@@ -147,6 +157,39 @@ export default function BookSlot() {
     );
   }
 
+  let bookingListData;
+
+  if (bookingList.isError) {
+    bookingListData = (
+      <div className="">Error: {bookingList.error.message}</div>
+    );
+  } else if (bookingList.isLoading) {
+    bookingListData = (
+      <div className="flex items-center justify-center text-gray-500">
+        Loading...
+      </div>
+    );
+  } else {
+    bookingListData = (
+      <div className="">
+        <div className="text-gray-500 text-xl mb-2 overflow-auto">Bookings</div>
+        {bookingsData.length > 0 ? (
+          bookingsData.map((item, index) => (
+            <div
+              className="flex items-center bg-black text-white shadow-md rounded-md p-2 m-2"
+              key={item.requestId}
+            >
+              <p className="mr-5">{index + 1}.</p>
+              <BookingCard item={item} />
+            </div>
+          ))
+        ) : (
+          <div className="">No Bookings</div>
+        )}
+      </div>
+    );
+  }
+
   const renderBookingAction = () => {
     if (checkBooking.isLoading) return <div>Checking booking...</div>;
 
@@ -158,9 +201,10 @@ export default function BookSlot() {
             <div className="">
               <div className="flex justify-between items-center">
                 <span className="font-bold">
-                  Your Booking Status: {getStatus.data || "PENDING"}
+                  Your Booking Status: {getStatus.data.status || "PENDING"}
                 </span>
-                {getStatus.data !== "DELETED" &&
+                {getStatus.data.status !== "DELETED" &&
+                  getStatus.data.requestBy.userId === user?.userId &&
                   slotInfo.startTime &&
                   new Date() < new Date(slotInfo.startTime) && (
                     <Button
@@ -199,7 +243,12 @@ export default function BookSlot() {
     return (
       <div className="">
         {slotInfo.startTime && new Date() < new Date(slotInfo.startTime) && (
-          <AddUserToGame min={data.minPlayers} max={data.maxPlayers} listbool={listbool} updateBookingList={updateBookingList} />
+          <AddUserToGame
+            min={data.minPlayers}
+            max={data.maxPlayers}
+            listbool={listbool}
+            updateBookingList={setListbool}
+          />
         )}
       </div>
     );
@@ -213,37 +262,12 @@ export default function BookSlot() {
           {renderBookingAction()}
         </div>
       </div>
-      <div className="">
-        {bookingList.isLoading ? (
-          <div className="">Loading...</div>
-        ) : bookingList.isError ? (
-          <div className="">Error: {bookingList.error.message}</div>
-        ) : (
-          <div className="">
-            <div className="text-gray-500 text-xl mb-2 overflow-auto">
-              Bookings
-            </div>
-            {bookingsData.length > 0 ? (
-              bookingsData.map((item, index) => (
-                <div
-                  className="flex items-center bg-black text-white shadow-md rounded-md p-2 m-2"
-                  key={item.requestId}
-                >
-                  <p className="mr-5">{index + 1}.</p>
-                  <BookingCard item={item} />
-                </div>
-              ))
-            ) : (
-              <div className="">No Bookings</div>
-            )}
-          </div>
-        )}
-      </div>
+      <div className="">{bookingListData}</div>
     </Card>
   );
 }
 
-function BookingCard({ item }: { item: BookingResponse }) {
+function BookingCard({ item }: { readonly item: BookingResponse }) {
   return (
     <div className="bg-black text-white">
       <p>{item.requestedBy.name}</p>
@@ -257,9 +281,9 @@ function GamesCard({
   active,
   slot,
 }: {
-  game: Games;
-  active: boolean;
-  slot: SlotInfo;
+  readonly game: Games;
+  readonly active: boolean;
+  readonly slot: SlotInfo;
 }) {
   return (
     <Card className="shadow-none border-0 p-5 md:p-10">
@@ -298,7 +322,17 @@ function GamesCard({
   );
 }
 
-function AddUserToGame({ min, max, listbool, updateBookingList }: { min: number; max: number, listbool:boolean ,updateBookingList: Dispatch<SetStateAction<boolean>> }) {
+function AddUserToGame({
+  min,
+  max,
+  listbool,
+  updateBookingList,
+}: {
+  readonly min: number;
+  readonly max: number;
+  readonly listbool: boolean;
+  readonly updateBookingList: Dispatch<SetStateAction<boolean>>;
+}) {
   const { slotId } = useParams();
   const { user } = useAuth();
   const [search, setSearch] = useState("");
@@ -350,7 +384,7 @@ function AddUserToGame({ min, max, listbool, updateBookingList }: { min: number;
     onSuccess: () => {
       notify.success("Booking Request Sent", "Wait for the approval.");
       setGamePartner([]);
-      updateBookingList(!listbool)
+      updateBookingList(!listbool);
     },
     onError: (err: any) => {
       notify.error(
@@ -378,7 +412,6 @@ function AddUserToGame({ min, max, listbool, updateBookingList }: { min: number;
       slotId: Number.parseInt(slotId),
       requestedBy: user.userId,
     };
-    console.log(payload);
     bookSlot.mutateAsync(payload);
   };
 
@@ -446,7 +479,7 @@ function AddUserToGame({ min, max, listbool, updateBookingList }: { min: number;
 
           <Button
             onClick={() => handleBooking()}
-            disabled={bookSlot.isPending ? true : false}
+            disabled={bookSlot.isPending}
             className="bg-black text-white mt-2"
           >
             {bookSlot.isPending ? "Booking..." : "Book slot"}

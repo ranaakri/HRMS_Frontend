@@ -93,7 +93,6 @@ export default function UpdateTravelDetails() {
 
   const mutation = useMutation({
     mutationFn: (data: any) => {
-      console.log("This is data: ", data);
       return api
         .put(server_url + `/travel/${travelId}`, data, {
           withCredentials: true,
@@ -200,8 +199,9 @@ export default function UpdateTravelDetails() {
           className="grid grid-cols-1 md:grid-cols-2 gap-6"
         >
           <div className="flex flex-col gap-2">
-            <label>Title</label>
+            <label htmlFor="title">Title</label>
             <Input
+            id="title"
               placeholder="Canada Trip"
               className="bg-white text-black"
               {...register("title", { required: "Title is required" })}
@@ -213,7 +213,7 @@ export default function UpdateTravelDetails() {
             )}
           </div>
           <div className="flex flex-col gap-2">
-            <label>Start and End Date</label>
+            <label htmlFor="dates">Start and End Date</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -233,6 +233,7 @@ export default function UpdateTravelDetails() {
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0 bg-white text-black">
                 <Calendar
+                id="dates"
                   mode="range"
                   selected={date}
                   onSelect={setDate}
@@ -242,7 +243,7 @@ export default function UpdateTravelDetails() {
             </Popover>
           </div>
           <div className="flex flex-col gap-2">
-            <label>Status</label>
+            <label htmlFor="status">Status</label>
             <Controller
               name="status"
               control={control}
@@ -273,8 +274,9 @@ export default function UpdateTravelDetails() {
             )}
           </div>
           <div className="flex flex-col gap-2">
-            <label>Assigned Budget</label>
+            <label htmlFor="budget">Assigned Budget</label>
             <Input
+              id="bidget"
               type="number"
               defaultValue={1000}
               className="bg-white text-black"
@@ -291,8 +293,9 @@ export default function UpdateTravelDetails() {
             )}
           </div>
           <div className="flex flex-col gap-2">
-            <label>Total Expense Till Now</label>
+            <label htmlFor="expense">Total Expense Till Now</label>
             <Input
+            id="expense"
               type="number"
               defaultValue={0}
               className="bg-white text-black"
@@ -309,8 +312,9 @@ export default function UpdateTravelDetails() {
             )}
           </div>
           <div className="flex flex-col gap-2 md:col-span-2">
-            <label>Description</label>
+            <label htmlFor="description">Description</label>
             <Textarea
+            id="description"
               placeholder="Type your trip description here..."
               className="bg-white text-black"
               {...register("description", {
@@ -327,7 +331,7 @@ export default function UpdateTravelDetails() {
             <Button
               type="submit"
               className="cursor-pointer"
-              disabled={mutation.isPending ? true : false}
+              disabled={mutation.isPending}
             >
               Submit
             </Button>

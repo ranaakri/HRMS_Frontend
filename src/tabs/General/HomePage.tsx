@@ -8,7 +8,13 @@ import { GameSlot, type ISlots } from "../Game/ListGameSlots";
 import { Link } from "react-router-dom";
 import type { ITravelDetails } from "../HR/UpdateTravel";
 import TravelCard from "@/components/custom/TravelCard";
-import { FaCalendarAlt, FaBirthdayCake, FaGamepad, FaPlaneDeparture } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaBirthdayCake,
+  FaGamepad,
+  FaPlaneDeparture,
+} from "react-icons/fa";
+import { IoDocumentText } from "react-icons/io5";
 
 interface BirthdayMessageResponse {
   name: string;
@@ -19,6 +25,31 @@ interface FavGame {
   name: string;
   gameId: number;
   upComingSlots: ISlots[];
+}
+
+export interface JobResponse {
+  jobId: number;
+  title: string;
+  summary: string;
+  jobPost: string;
+  jdFilePath: string;
+  lastApplicationDate: string;
+  status: string;
+  createdAt: string;
+  hrContact: HrContact;
+  cvReviewers: CvReviewer[];
+}
+
+export interface HrContact {
+  userId: number;
+  name: string;
+  email: string;
+}
+
+export interface CvReviewer {
+  userId: number;
+  name: string;
+  email: string;
 }
 
 export default function HomePage() {
@@ -34,6 +65,11 @@ export default function HomePage() {
     queryFn: () =>
       api.get(`/users/game/${user?.userId}`).then((res) => res.data),
     enabled: !!user?.userId,
+  });
+
+  const jobOpenings = useQuery<JobResponse[], ApiError>({
+    queryKey: ["jobOpenings"],
+    queryFn: () => api.get("/job/latest").then((res) => res.data),
   });
 
   const travelPlan = useQuery<ITravelDetails>({
@@ -57,16 +93,52 @@ export default function HomePage() {
   if (birthday.isError)
     return <div className="text-red-500">Error: {birthday.error.message}</div>;
 
+  let gameSlot;
+
+  if (gameSlots.isError) {
+    gameSlot = (
+      <div className="py-10 text-center text-gray-400">
+        {gameSlots.error.response?.data.message}
+      </div>
+    );
+  } else if (gameSlots.isLoading) {
+    gameSlot = (
+      <div className="py-10 text-center text-gray-400">Loading slots...</div>
+    );
+  } else {
+    gameSlot = (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {gameSlots.data?.upComingSlots.length ? (
+          gameSlots.data.upComingSlots.map((item) => (
+            <Link
+              to={`../game/slots/${gameSlots.data.gameId}/book/${item.slotId}`}
+              key={item.slotId}
+              className="transform hover:scale-[1.02] transition-transform"
+            >
+              <GameSlot slot={item} disable={true} />
+            </Link>
+          ))
+        ) : (
+          <div className="col-span-full py-10 text-center text-gray-400">
+            No upcoming slots.
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <Card className="bg-white rounded-xl border-0 shadow-sm p-6 md:p-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <FaBirthdayCake className="text-amber-500 size-6" />
-            <h2 className="font-bold text-2xl text-gray-800">Today's Birthdays</h2>
+            <h2 className="font-bold text-2xl text-gray-800">
+              Today's Birthdays
+            </h2>
           </div>
-          <Link 
-            to={"calendar-events"} 
+          <Link
+            to={"calendar-events"}
             className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-gray-600 rounded-lg hover:bg-indigo-100 transition-colors font-medium"
           >
             <FaCalendarAlt /> <span>View Bookings</span>
@@ -79,7 +151,7 @@ export default function HomePage() {
               <BirthdayMessage
                 name={item.name}
                 profileUrl={item.profileUrl}
-                key={index}
+                key={item.name + index}
               />
             ))}
           </div>
@@ -90,43 +162,63 @@ export default function HomePage() {
         )}
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card className="bg-white rounded-xl border-0 shadow-sm p-6 md:p-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <IoDocumentText className="text-black size-6" />
+            <h2 className="font-bold text-2xl text-gray-800">
+              Latest Job Openings
+            </h2>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {jobOpenings.data && jobOpenings.data.length > 0 ? (
+            jobOpenings.data.map((job) => (
+              <div
+                key={job.jobId}
+                className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors"
+              >
+                <div>
+                  <h3 className="font-semibold text-gray-800">{job.title}</h3>
+                  <p className="text-sm text-gray-500">
+                    Posted on {new Date(job.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <Link
+                  to={`../job/view/${job.jobId}`}
+                  className="text-sm font-medium text-indigo-600"
+                >
+                  View Details
+                </Link>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-4 text-gray-400">
+              No recent job openings.
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <Card className="bg-white rounded-xl border-0 shadow-sm p-6">
           <div className="flex items-center gap-2 mb-6">
             <FaGamepad className="text-emerald-500 size-6" />
-            <h2 className="font-bold text-xl text-gray-800">Favorite Game: {gameSlots.data?.name || "Slots"}</h2>
+            <h2 className="font-bold text-lg md:text-xl text-gray-800">
+              Favorite Game: {gameSlots.data?.name || "Slots"}
+            </h2>
           </div>
-          
-          {gameSlots.isError ? (
-            <div className="py-10 text-center text-gray-400">{gameSlots.error.response?.data.message}</div>
-          ) : gameSlots.isLoading ? (
-            <div className="py-10 text-center text-gray-400">Loading slots...</div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {gameSlots.data?.upComingSlots.length ? (
-                gameSlots.data.upComingSlots.map((item) => (
-                  <Link
-                    to={`../game/slots/${gameSlots.data.gameId}/book/${item.slotId}`}
-                    key={item.slotId}
-                    className="transform hover:scale-[1.02] transition-transform"
-                  >
-                    <GameSlot slot={item} disable={true} />
-                  </Link>
-                ))
-              ) : (
-                <div className="col-span-full py-10 text-center text-gray-400">No upcoming slots.</div>
-              )}
-            </div>
-          )}
+
+          {gameSlot}
         </Card>
 
         <Card className="bg-white rounded-xl border-0 shadow-sm p-6">
           <div className="flex items-center gap-2 mb-6">
             <FaPlaneDeparture className="text-blue-500 size-6" />
-            <h2 className="font-bold text-xl text-gray-800">Upcoming Travel</h2>
+            <h2 className="font-bold text-lg md:text-xl text-gray-800">Upcoming Travel</h2>
           </div>
-          
-          {!!travelPlan.data ? (
+
+          {travelPlan.data ? (
             <div className="-mx-4">
               <TravelCard
                 details={travelPlan.data}

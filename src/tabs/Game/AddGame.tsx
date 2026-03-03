@@ -18,7 +18,7 @@ export interface CreateGame {
 }
 
 export default function AddGame() {
-  const [active, setGameActive] = useState(true);
+  const [active, setActive] = useState(true);
   const {
     register,
     handleSubmit,
@@ -31,12 +31,10 @@ export default function AddGame() {
     },
     onSuccess: () => {
       notify.success("Success", "New game created successfully");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
-      return;
     },
   });
 
@@ -53,8 +51,9 @@ export default function AddGame() {
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
         <div className="">
-          <label htmlFor="">Game Title</label>
+          <label htmlFor="title">Game Title</label>
           <Input
+          id="title"
             type="text"
             {...register("name", {
               required: "Game Title is required",
@@ -65,8 +64,9 @@ export default function AddGame() {
           )}
         </div>
         <div className="">
-          <label htmlFor="">Slot duration</label>
+          <label htmlFor="slot-duration">Slot duration</label>
           <Input
+          id="slot-duration"
             type="number"
             {...register("slotDuration", {
               required: "Slot duration is required",
@@ -79,8 +79,9 @@ export default function AddGame() {
           )}
         </div>
         <div className="">
-          <label htmlFor="">Min Players</label>
+          <label htmlFor="min-players">Min Players</label>
           <Input
+          id="min-players"
             type="number"
             {...register("minPlayers", {
               required: "Minimum players for the game is required",
@@ -93,8 +94,9 @@ export default function AddGame() {
           )}
         </div>
         <div className="">
-          <label htmlFor="">Max Players</label>
+          <label htmlFor="max-players">Max Players</label>
           <Input
+          id="max-players"
             type="number"
             {...register("maxPlayers", {
               required: "Max players for the game is required",
@@ -106,8 +108,9 @@ export default function AddGame() {
         </div>
 
         <div className="">
-          <label htmlFor="">Opening Time</label>
+          <label htmlFor="opening-time">Opening Time</label>
           <Input
+          id="opening-time"
             type="time"
             {...register("openTime", {
               required: "Opening time of the game is required",
@@ -118,8 +121,9 @@ export default function AddGame() {
           )}
         </div>
         <div className="">
-          <label htmlFor="">Closing Time</label>
+          <label htmlFor="close-time">Closing Time</label>
           <Input
+          id="close-time"
             type="time"
             {...register("closeTime", {
               required: "Closing time for the game is required",
@@ -134,14 +138,14 @@ export default function AddGame() {
             type="checkbox"
             id="isActive"
             checked
-            onChange={() => setGameActive(!active)}
+            onChange={() => setActive(!active)}
           />
           <label htmlFor="isActive">Active</label>
         </div>
         <div className="">
           <Button
             className="bg-black text-white"
-            disabled={createGame.isPending ? true : false}
+            disabled={createGame.isPending}
           >
             Create Game
           </Button>

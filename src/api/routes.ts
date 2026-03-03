@@ -5,5 +5,5 @@ export const RouteList = {
     listMyTravelPlans: "/travel/user/", //List my travel plans
     travelingUsers: '/travel/traveling-user', //List All traveling user {travelId}
     uploadTravelingDocs: '/travel/documents', //{uploadedBy}/{travelingUser}/{docType}
-    uploadedTravelingDocs: '/travel/documents' //{travelingUserId}
+    uploadedTravelingDocs: '/travel/documents' // /{travelingUserId}
 }

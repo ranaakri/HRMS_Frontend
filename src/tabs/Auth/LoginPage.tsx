@@ -3,7 +3,7 @@ import { BsClipboard2Check } from "react-icons/bs";
 import { FaLockOpen } from "react-icons/fa";
 import { getCookie, useAuth, type Role } from "@/context/AuthContext";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/api/api";
 
@@ -155,12 +155,9 @@ export default function LoginPage() {
           <hr className="m-4 text-gray-300" />
 
           <div className="flex items-center justify-center">
-            <p>
-              Don't have an account?{" "}
-              <a href="#" className="text-blue-600 hover:underline">
-                Contact HR
-              </a>
-            </p>
+              <Link to={"/forgot-password"} className="text-blue-600 hover:underline">
+                forgot-password?
+              </Link>
           </div>
         </form>
       </div>

@@ -2,7 +2,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import api from "@/api/api";
 import { useParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { DateOptions } from "./ListJobs";
 import {
   Select,
   SelectContent,
@@ -13,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { notify } from "@/components/custom/Notification";
+import { DateOptions } from "@/tabs/HR/JobManagement/ListJobs";
+import { useAuth } from "@/context/AuthContext";
 
 export interface IJobReferralsRes {
   candidateEmail: string;
@@ -37,15 +38,19 @@ export interface ReferredBy {
   userId: number;
 }
 
-export default function JobReferral() {
+export default function ListCvForReviews() {
   const { jobId } = useParams();
+  const { user } = useAuth();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["sharedLog"],
     queryFn: () =>
       api
-        .get<IJobReferralsRes[]>("/referral/job/" + jobId)
+        .get<
+          IJobReferralsRes[]
+        >(`/referral/cv-review/referrals/job/${jobId}/user/${user?.userId}`)
         .then((res) => res.data),
+    enabled: !!user?.userId && !!jobId,
   });
 
   if (isLoading)

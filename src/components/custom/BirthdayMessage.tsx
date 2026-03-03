@@ -4,7 +4,7 @@ interface Props {
   readonly profileUrl: string;
 }
 
-var wishes = [
+let wishes = [
   "Happy birthday! We hope you have a great day!",
 
   "All the best on your special day!",
@@ -25,7 +25,7 @@ var wishes = [
 ];
 
 export default function BirthdayMessage({ name, profileUrl }: Props) {
-  var index = Math.floor(Math.random() * 10) + 1;
+  let index = Math.floor(Math.random() * 10) + 1;
   return (
     <div className="flex gap-4 border-2 border-l-6 p-5 md:max-w-1/2 md:min-w-1/2 m-5 mr-0 rounded-2xl border-amber-400 bg-amber-50">
       <div className="">
@@ -39,8 +39,7 @@ export default function BirthdayMessage({ name, profileUrl }: Props) {
         <p className="text-amber-600 font-semibold flex items-center gap-2">
           <span className="">
             <MdCelebration size={25} />
-          </span>
-          BIRTHDAY
+          </span>BIRTHDAY
         </p>
         <p className="font-bold md:text-xl">Happy Birthday, {name}</p>
         <p className="text-amber-500 flex items-center gap-2">

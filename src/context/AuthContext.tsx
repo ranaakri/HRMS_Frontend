@@ -36,7 +36,7 @@ export const getCookie = (name: string) => {
 export default function AuthContextProvider({
   children,
 }: {
-  children: ReactNode;
+  readonly children: ReactNode;
 }) {
   const [isLoggedin, setLoggedin] = useState<boolean>(
     () => !!getCookie("LoggedIn"),

@@ -137,7 +137,6 @@ export default function CreateJob() {
 
   const mutation = useMutation({
     mutationFn: (data: ICreateJob) => {
-      console.log(data)
       return api
         .post<JobResponse>("/job", data, { withCredentials: true })
         .then((res) => res.data);
@@ -364,7 +363,7 @@ export default function CreateJob() {
           <Button
             variant={"outline"}
             className="bg-black cursor-pointer text-white"
-            disabled={mutation.isPending || fileUpload.isPending ? true : false}
+            disabled={mutation.isPending || fileUpload.isPending}
           >
             Create
           </Button>

@@ -38,8 +38,8 @@ function UploadedFiles({
   uploadedDocs,
   setUploadedDocs,
 }: {
-  uploadedDocs: DocumentInfo[];
-  setUploadedDocs: Dispatch<SetStateAction<DocumentInfo[]>>;
+  readonly uploadedDocs: DocumentInfo[];
+  readonly setUploadedDocs: Dispatch<SetStateAction<DocumentInfo[]>>;
 }) {
   const options = { timeZone: "Asia/Kolkata" };
   const { user } = useAuth();
@@ -54,12 +54,10 @@ function UploadedFiles({
     },
     onSuccess: () => {
       notify.success("Document deleted succesfully");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
-      return;
     },
   });
 
@@ -78,31 +76,31 @@ function UploadedFiles({
   };
 
   return (
-    <div className="">
+    <div className="mt-4 space-y-2">
       {uploadedDocs.length > 0 &&
         uploadedDocs.map((item, index) => (
           <div
-            className="grid grid-cols-2 md:grid-cols-4 gap-2 items-center m-2"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center p-3 rounded-lg border border-gray-100 bg-gray-50/50"
             key={item.docId}
           >
             <a
               href={item.filePath}
-              className="text-blue-500 underline"
+              className="text-blue-600 hover:text-blue-800 underline font-medium truncate"
               target="_blank"
             >
-              {index}. {item.docType}
+              {index + 1}. {item.docType.replace("_", " ")}
             </a>
-            <Badge className="border text-white">{item.staus}</Badge>
-            <div className="">
+            <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100 border-none shadow-none">{item.staus}</Badge>
+            <div className="text-sm text-gray-500">
               {new Date(item.uploadedAt).toLocaleDateString(undefined, options)}
             </div>
-            <div className="">
-              {!(user?.role === "Manager") && (
+            <div className="flex justify-end">
+              {user?.role !== "Manager" && (
                 <Button
-                  variant={"default"}
-                  className="bg-red-500"
+                  variant="ghost"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8"
                   onClick={() => handleDeleteDoc(item.docId)}
-                  disabled={deleteDoc.isPending ? true : false}
+                  disabled={deleteDoc.isPending}
                 >
                   Remove
                 </Button>
@@ -115,10 +113,10 @@ function UploadedFiles({
   );
 }
 
-export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
+export default function UploadTravelingDocs({ item }: { readonly item: TravelingUser }) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docType, setDocType] = useState<string>();
-  const [uploadedDoc, setUploadedDocs] = useState<DocumentInfo[]>([]);
+  const [uploadedDoc, setUploadedDoc] = useState<DocumentInfo[]>([]);
   const { user } = useAuth();
 
   const { data } = useQuery({
@@ -132,7 +130,7 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
   });
 
   useEffect(() => {
-    if (data) setUploadedDocs(data);
+    if (data) setUploadedDoc(data);
   }, [data]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,31 +159,33 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
           DocumentInfo[]
         >(RouteList.uploadTravelingDocs + `/${user.userId}/${item.travelingUserId}/${docType}`, formData, { withCredentials: true })
         .then((res) => res.data);
-      setUploadedDocs(response);
-      console.log(response);
+      setUploadedDoc(response);
       // setUploaded([...uploaded, response])
       notify.success("Image uploaded successfully");
     } catch (error: any) {
       notify.error("Error", error.response.data.message);
-      console.log("Error in uploading image", error.response);
+      console.error("Error in uploading image", error.response);
     }
   };
 
   return (
-    <div className="p-4 rounded-md bg-white shadow-md border-0 m-2">
-      <p className="font-semibold text-black mb-2">{item.user.name}</p>
-      <p className="text-gray-600 font-mono mb-2">{item.user.email}</p>
-      {!(user?.role === "Manager") && (
-        <div className="flex gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              required
-              className="bg-white"
-            />
-            <Select onValueChange={(value) => setDocType(value)} required>
-              <SelectTrigger className="w-full max-w-48 bg-white">
+    <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-200 m-4">
+      <div className="mb-4">
+        <h3 className="text-lg font-bold text-gray-900">{item.user.name}</h3>
+        <p className="text-sm text-gray-500">{item.user.email}</p>
+      </div>
+      
+      {user?.role !== "Manager" && (
+        <div className="flex flex-col md:flex-row gap-3 mb-6 p-4 bg-gray-50 rounded-lg">
+          <Input
+            type="file"
+            onChange={handleFileChange}
+            required
+            className="bg-white md:max-w-xs"
+          />
+          <div className="flex gap-2 flex-1">
+            <Select onValueChange={(value) => setDocType(value)} required >
+              <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Select Document Type" />
               </SelectTrigger>
               <SelectContent className="bg-white">
@@ -195,19 +195,23 @@ export default function UploadTravelingDocs({ item }: { item: TravelingUser }) {
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <Button
+              className="bg-black text-white hover:bg-gray-800 px-8"
+              onClick={handleFileUpload}
+            >
+              Upload
+            </Button>
           </div>
-          <Button
-            className="bg-gray-500 text-white cursor-pointer hover:bg-gray-900 duration-200"
-            onClick={handleFileUpload}
-          >
-            Add
-          </Button>
         </div>
       )}
+      
+      <div className="border-t pt-4">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">Uploaded Documents</h4>
       <UploadedFiles
         uploadedDocs={uploadedDoc}
-        setUploadedDocs={setUploadedDocs}
+        setUploadedDocs={setUploadedDoc}
       />
+      </div>
     </div>
   );
 }

@@ -47,7 +47,7 @@ export default function MyTravelPlans() {
 
       {user?.role === "Manager" && (
         <div className="ml-4 mb-6 flex gap-4">
-          <Button variant="outline" onClick={() => navigate("../../../travel")}>
+          <Button variant="outline" className="bg-gray-500 text-white" onClick={() => navigate("../../../travel")}>
             View All Plans
           </Button>
         </div>
@@ -67,7 +67,7 @@ export default function MyTravelPlans() {
         {filteredList?.length > 0 ? (
           filteredList.map((item: any) => (
             <TravelCard 
-              key={item.id + "_list"}
+              key={item.travelId + "_list"}
               myTarvelPlan={true} 
               details={item} 
               expense={true} 

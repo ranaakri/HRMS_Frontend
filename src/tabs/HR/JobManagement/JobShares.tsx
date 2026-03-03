@@ -45,12 +45,10 @@ export default function JobShares() {
     },
     onSuccess: () => {
       notify.success("Success", "Status changed");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
-      return;
     },
   });
 
@@ -79,7 +77,7 @@ export default function JobShares() {
                 handleStatusChange(row.original.logId, value);
               }}
               defaultValue={row.original.status}
-              disabled={statusChange.isPending ? true : false}
+              disabled={statusChange.isPending}
             >
               <SelectTrigger className="bg-white text-black">
                 <SelectValue placeholder="Select Status" />

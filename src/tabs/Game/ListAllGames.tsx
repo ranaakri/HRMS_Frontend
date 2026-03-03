@@ -32,7 +32,7 @@ export interface GameInterest {
 export default function ListAllGames({
   activeGames,
 }: {
-  activeGames: boolean;
+  readonly activeGames: boolean;
 }) {
   const { user } = useAuth();
   const [search, setSearch] = useState<string>("");
@@ -100,7 +100,7 @@ export default function ListAllGames({
   );
 }
 
-function GamesCard({ game }: { game: Games; }) {
+function GamesCard({ game }: { readonly game: Games; }) {
   const { user } = useAuth();
   const [fav, setFav] = useState(game.favourite);
   const { confirm, ConfirmComponent } = useConfirm();
@@ -113,13 +113,10 @@ function GamesCard({ game }: { game: Games; }) {
     },
     onSuccess: () => {
       notify.success("Success!!", "Game is added as interest");
-      setFav(true)
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
-      console.log(error.response);
-      return;
+      console.error(error.response);
     },
   });
 
@@ -131,13 +128,10 @@ function GamesCard({ game }: { game: Games; }) {
     },
     onSuccess: () => {
       notify.success("Success!!", "Game is removed from interest");
-      setFav(false)
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
-      console.log(error.response);
-      return;
+      console.error(error.response);
     },
   });
 
@@ -150,7 +144,6 @@ function GamesCard({ game }: { game: Games; }) {
     onSuccess: () => {
       setFav(true);
       notify.success("Game added as favourate");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
@@ -167,7 +160,6 @@ function GamesCard({ game }: { game: Games; }) {
     onSuccess: () => {
       setFav(false);
       notify.success("Game removed as favourate");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);

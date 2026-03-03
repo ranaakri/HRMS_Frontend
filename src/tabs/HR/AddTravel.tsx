@@ -57,7 +57,6 @@ export default function AddTravel() {
 
   const mutation = useMutation({
     mutationFn: (data: IAddTravelDetails) => {
-      console.log("This is data: ", data);
       return axios
         .post(server_url + "/travel", data, { withCredentials: true })
         .then((res) => res.data.data);
@@ -69,7 +68,7 @@ export default function AddTravel() {
 
     onError: (error: any) => {
       notify.error("Faild to add travel details", error.response.data.message);
-      console.log(error.response);
+      console.error(error.response);
     },
   });
 
@@ -84,8 +83,6 @@ export default function AddTravel() {
     mutation.mutateAsync(finalData);
   };
 
-  // if(mutation.isError) return <div className="">{mutation.error.message}</div>
-
   return (
     <Card className="p-5 md:p-10 border-0 bg-white">
       <h2 className="text-2xl font-bold justify-self-center m-2 text-gray-500 bg-white">
@@ -96,8 +93,9 @@ export default function AddTravel() {
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         <div className="flex flex-col gap-2">
-          <label>Title</label>
+          <label htmlFor="title">Title</label>
           <Input
+          id="title"
             placeholder="Canada Trip"
             className="bg-white text-black"
             {...register("title", { required: "Title is required" })}
@@ -109,7 +107,7 @@ export default function AddTravel() {
           )}
         </div>
         <div className="flex flex-col gap-2">
-          <label>Start and End Date</label>
+          <label htmlFor="date">Start and End Date</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
@@ -130,6 +128,7 @@ export default function AddTravel() {
             <PopoverContent className="w-auto p-0 bg-white text-black">
               <Calendar
                 mode="range"
+                id="date"
                 selected={date}
                 onSelect={setDate}
                 numberOfMonths={2}
@@ -138,7 +137,7 @@ export default function AddTravel() {
           </Popover>
         </div>
         <div className="flex flex-col gap-2">
-          <label>Status</label>
+          <label htmlFor="status">Status</label>
           <Controller
             name="status"
             control={control}
@@ -165,9 +164,10 @@ export default function AddTravel() {
           )}
         </div>
         <div className="flex flex-col gap-2">
-          <label>Assigned Budget</label>
+          <label htmlFor="budget">Assigned Budget</label>
           <Input
             type="number"
+            id="budget"
             defaultValue={1000}
             className="bg-white text-black"
             {...register("assignedBudget", {
@@ -182,9 +182,10 @@ export default function AddTravel() {
           )}
         </div>
         <div className="flex flex-col gap-2">
-          <label>Total Expense Till Now</label>
+          <label htmlFor="expense">Total Expense Till Now</label>
           <Input
             type="number"
+            id="expense"
             defaultValue={0}
             className="bg-white text-black"
             {...register("totalExpense", {
@@ -199,9 +200,10 @@ export default function AddTravel() {
           )}
         </div>
         <div className="flex flex-col gap-2 md:col-span-2">
-          <label>Description</label>
+          <label htmlFor="description">Description</label>
           <Textarea
             placeholder="Type your trip description here..."
+            id="description"
             className="bg-white text-black"
             {...register("description", {
               required: "Description is required",
@@ -224,7 +226,7 @@ export default function AddTravel() {
           <Button
             type="submit"
             className="cursor-pointer"
-            disabled={mutation.isPending ? true : false}
+            disabled={mutation.isPending}
           >
             Submit
           </Button>

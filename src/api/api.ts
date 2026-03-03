@@ -11,8 +11,6 @@ export default api;
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.log("Interceptor triggered");
-    console.log("Status:", error.response?.status);
 
     const originalRequest = error.config;
 

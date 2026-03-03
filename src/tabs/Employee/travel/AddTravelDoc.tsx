@@ -34,7 +34,7 @@ export interface UploadedBy {
   email: string;
 }
 
-function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
+function UploadedFiles({ uploadedDocs }: { readonly uploadedDocs: DocumentInfo[] }) {
   const options = { timeZone: "Asia/Kolkata" }
   const {confirm, ConfirmComponent} = useConfirm()
 
@@ -97,11 +97,9 @@ function UploadedFiles({ uploadedDocs }: { uploadedDocs: DocumentInfo[] }) {
 export default function UploadTravelingDocsEmp() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docType, setDocType] = useState<string>();
-  const [uploadedDoc, setUploadedDocs] = useState<DocumentInfo[]>([]);
+  const [uploadedDoc, setUploadedDoc] = useState<DocumentInfo[]>([]);
   const { user } = useAuth();
   const {travelId} = useParams();
-
-  const [reload, setReaload] = useState<boolean>(false);
 
   const { data } = useQuery({
     queryKey: ["uplaodedDocuments", user?.userId],
@@ -114,7 +112,7 @@ export default function UploadTravelingDocsEmp() {
   });
 
   useEffect(() => {
-    if (data) setUploadedDocs(data);
+    if (data) setUploadedDoc(data);
   }, [data]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -143,8 +141,7 @@ export default function UploadTravelingDocsEmp() {
           DocumentInfo[]
         >(RouteList.uploadTravelingDocs + `/employee/${user.userId}/${travelId}/${docType}`, formData, { withCredentials: true })
         .then((res) => res.data);
-      setReaload(!reload);
-      setUploadedDocs(response);
+      setUploadedDoc(response);
       // setUploaded([...uploaded, response])
       notify.success("Image uploaded successfully");
     } catch (error: any) {

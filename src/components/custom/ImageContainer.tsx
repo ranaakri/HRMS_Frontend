@@ -11,8 +11,8 @@ export default function ImageContainer({
   imageData,
   onRemove,
 }: {
-  imageData: TravelGallery;
-  onRemove: () => void;
+  readonly imageData: TravelGallery;
+  readonly onRemove: () => void;
 }) {
 
   const { confirm, ConfirmComponent } = useConfirm();
@@ -37,15 +37,13 @@ export default function ImageContainer({
     }
   };
 
-  console.log("Image data: ", imageData);
-
   return (
     <Card className="flex items-center justify-center border-0 p-2 m-2 bg-gray-200 shadow-md">
       <div className="relative">
         <a target="_blank" href={imageData.filePath}>
           <img
             src={imageData.filePath}
-            alt="no image"
+            alt="no data"
             className="h-50 w-full rounded-md border object-cover"
           />
         </a>

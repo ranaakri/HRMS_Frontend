@@ -4,9 +4,12 @@ import { notify } from "@/components/custom/Notification";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
+import type { IUserList } from "./AddUser";
+import { useDebounce } from "@/hook/DebounceHoot";
+import { Button } from "@/components/ui/button";
 
 export interface IUser {
   active: boolean;
@@ -18,6 +21,7 @@ export interface IUser {
   name: string;
   profileUrl: string;
   role: Role;
+  assignedUnder: AssignedUnder | null;
   userId: number;
 }
 
@@ -40,6 +44,7 @@ interface UpdateUser {
   updatedAt: string;
   roleId: number;
   departmentId: number;
+  assignedUnderId: number | null;
 }
 
 interface IRoles {
@@ -53,8 +58,16 @@ interface IDepartments {
   description: string;
 }
 
+interface AssignedUnder {
+  userId: number;
+  name: string;
+  email: string;
+}
+
 export default function UpdateUser() {
   const { userId } = useParams();
+
+  const [assignedUnder, setAssignedUnder] = useState<number | undefined | null >(null);
 
   const profileQuery = useQuery<IUser, ApiError>({
     queryKey: ["fetchUserProfile", userId],
@@ -98,8 +111,10 @@ export default function UpdateUser() {
           : "",
         roleId: profileQuery.data.role.roleId,
         departmentId: profileQuery.data.department.departmentId,
+        assignedUnderId: profileQuery.data.assignedUnder ? profileQuery.data.assignedUnder.userId : null ,
         updatedAt: new Date().toISOString(),
       });
+      setAssignedUnder(profileQuery.data.assignedUnder?.userId)
     }
   }, [profileQuery.data, reset]);
 
@@ -119,149 +134,239 @@ export default function UpdateUser() {
   });
 
   const onSubmit = (data: UpdateUser) => {
+    if (!assignedUnder) {
+      notify.error("Error", "Please select a user to assign under");
+      return;
+    }
     updateMutation.mutate({
       ...data,
+      assignedUnderId: assignedUnder,
       updatedAt: new Date().toISOString(),
     });
   };
 
+  if (profileQuery.isSuccess) {
+    return (
+      <Card className="bg-white p-5 md:p-10 rounded-md shadow-md">
+        <h3 className="text-gray-500 text-2xl">Update User Profile</h3>
+        <div className="flex justify-start items-center">
+          <img
+            src={profileQuery.data?.profileUrl}
+            alt="no data"
+            className="w-25 h-25 rounded-full object-cover"
+          />
+        </div>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4"
+        >
+          <div className="">
+            <label htmlFor="name" className="text-gray-500 mb-4">
+              Name
+            </label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Name"
+              {...register("name", { required: "Name is required" })}
+            />
+            {errors.name && (
+              <p className="text-red-500">{errors.name.message}</p>
+            )}
+          </div>
+
+          <div className="">
+            <label htmlFor="email" className="text-gray-500 mb-4">
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Email"
+              {...register("email", { required: "Email is required" })}
+            />
+            {errors.email && (
+              <p className="text-red-500">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="">
+            <label htmlFor="designation" className="text-gray-500 mb-4">
+              Designation
+            </label>
+            <select
+              id="designation"
+              {...register("designation", {
+                required: "Designation is required",
+              })}
+              className="w-full border p-2 rounded"
+            >
+              <option value="">Select Designation</option>
+              {designationQuery.data?.map((deg) => (
+                <option key={deg} value={deg.toString()}>
+                  {deg}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="">
+            <label htmlFor="birthdate" className="text-gray-500 mb-4">
+              Birthdate
+            </label>
+            <Input
+              type="date"
+              id="birthdate"
+              {...register("birthdate", { required: "Birthdate is required" })}
+            />
+          </div>
+
+          <div className="">
+            <label htmlFor="joiningDate" className="text-gray-500 mb-4">
+              Joining Date
+            </label>
+            <Input
+              type="date"
+              id="joiningDate"
+              {...register("joiningDate", {
+                required: "Joining date is required",
+              })}
+            />
+          </div>
+
+          <div className="">
+            <label htmlFor="department" className="text-gray-500 mb-4">
+              Department
+            </label>
+            <select
+              id="department"
+              {...register("departmentId", {
+                valueAsNumber: true,
+                required: "Department is required",
+              })}
+              className="w-full border p-2 rounded"
+            >
+              <option value="">Select Department</option>
+              {departmentQuery.data?.map((dep) => (
+                <option key={dep.departmentId} value={dep.departmentId}>
+                  {dep.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="">
+            <label htmlFor="role" className="text-gray-500 mb-4">
+              Role
+            </label>
+            <select
+              id="role"
+              {...register("roleId", {
+                valueAsNumber: true,
+                required: "Role is required",
+              })}
+              className="w-full border p-2 rounded"
+            >
+              <option value="">Select Role</option>
+              {rolesQuery.data?.map((role) => (
+                <option key={role.roleId} value={role.roleId}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className=""></div>
+          <div className="col-span-2">
+            <div className="text-gray-500 items-center justify-center text-xl mb-2">
+              Assign Under
+            </div>
+            <AddAssignedUnder
+              assignedUnder={profileQuery.data?.assignedUnder}
+              setAssignedUnder={setAssignedUnder}
+            />
+          </div>
+          <div className="">
+            <button
+              type="submit"
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? "Updating..." : "Update User"}
+            </button>
+          </div>
+        </form>
+      </Card>
+    );
+  }
+}
+
+function AddAssignedUnder({
+  assignedUnder,
+  setAssignedUnder,
+}: {
+  readonly assignedUnder: AssignedUnder | undefined | null;
+  readonly setAssignedUnder: React.Dispatch<React.SetStateAction<number | undefined | null>>;
+}) {
+  const [search, setSearch] = useState("");
+  const [userList, setUserList] = useState<IUserList[]>([]);
+  const [selectedUser, setSelectedUser] = useState<IUserList | undefined | null>(
+    assignedUnder,
+  );
+
+  const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (search.length < 2) {
+      setUserList([]);
+      return;
+    }
+
+    api
+      .get(`/users/list?name=${debouncedSearch}`)
+      .then((res) => setUserList(res.data))
+      .catch(() => notify.error("Error", "Failed to fetch users"));
+  }, [debouncedSearch]);
+
   return (
-    <Card className="bg-white p-5 md:p-10 rounded-md shadow-md">
-      <h3 className="text-gray-500 text-2xl">Update User Profile</h3>
-      <div className="flex justify-start items-center">
-        <img
-          src={profileQuery.data?.profileUrl}
-          className="w-25 h-25 rounded-full object-cover"
-        />
-      </div>
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
-        <div className="">
-          <label htmlFor="name" className="text-gray-500 mb-4">
-            Name
-          </label>
-          <Input
-            id="name"
-            type="text"
-            placeholder="Name"
-            {...register("name", { required: "Name is required" })}
-          />
-          {errors.name && <p className="text-red-500">{errors.name.message}</p>}
-        </div>
+    <div className="space-y-4">
+      <Input
+        placeholder="Search users..."
+        value={search}
+        className="bg-white"
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
-        <div className="">
-          <label htmlFor="email" className="text-gray-500 mb-4">
-            Email
-          </label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="Email"
-            {...register("email", { required: "Email is required" })}
-          />
-          {errors.email && (
-            <p className="text-red-500">{errors.email.message}</p>
-          )}
-        </div>
+      {userList.map((user) => (
+        <Card
+          key={user.userId}
+          className="p-3 flex flex-row justify-between items-center bg-white "
+        >
+          <div>
+            <p className="font-semibold">{user.name}</p>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
 
-        <div className="">
-          <label htmlFor="designation" className="text-gray-500 mb-4">
-            Designation
-          </label>
-          <select
-            id="designation"
-            {...register("designation", {
-              required: "Designation is required",
-            })}
-            className="w-full border p-2 rounded"
+          <Button
+            className="bg-black text-white"
+            onClick={() => {
+              setAssignedUnder(user.userId);
+              setSelectedUser(user);
+              setSearch("");
+            }}
+            type="button"
           >
-            <option value="">Select Designation</option>
-            {designationQuery.data?.map((deg) => (
-              <option key={deg} value={deg.toString()}>
-                {deg}
-              </option>
-            ))}
-          </select>
-        </div>
-
+            Select
+          </Button>
+        </Card>
+      ))}
+      {selectedUser && (
         <div className="">
-          <label htmlFor="birthdate" className="text-gray-500 mb-4">
-            Birthdate
-          </label>
-          <Input
-            type="date"
-            id="birthdate"
-            {...register("birthdate", { required: "Birthdate is required" })}
-          />
+          <div className="flex p-4 gap-4 border-0 mt-4 bg-gray-100 rounded-md">
+            <p>{selectedUser.name}</p>
+            <p>{selectedUser.email}</p>
+          </div>
         </div>
-
-        <div className="">
-          <label htmlFor="joiningDate" className="text-gray-500 mb-4">
-            Joining Date
-          </label>
-          <Input
-            type="date"
-            id="joiningDate"
-            {...register("joiningDate", {
-              required: "Joining date is required",
-            })}
-          />
-        </div>
-
-        <div className="">
-          <label htmlFor="department" className="text-gray-500 mb-4">
-            Department
-          </label>
-          <select
-            id="department"
-            {...register("departmentId", {
-              valueAsNumber: true,
-              required: "Department is required",
-            })}
-            className="w-full border p-2 rounded"
-          >
-            <option value="">Select Department</option>
-            {departmentQuery.data?.map((dep) => (
-              <option key={dep.departmentId} value={dep.departmentId}>
-                {dep.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="">
-          <label htmlFor="role" className="text-gray-500 mb-4">
-            Role
-          </label>
-          <select
-            id="role"
-            {...register("roleId", {
-              valueAsNumber: true,
-              required: "Role is required",
-            })}
-            className="w-full border p-2 rounded"
-          >
-            <option value="">Select Role</option>
-            {rolesQuery.data?.map((role) => (
-              <option key={role.roleId} value={role.roleId}>
-                {role.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className=""></div>
-        <div className="">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            disabled={updateMutation.isPending}
-          >
-            {updateMutation.isPending ? "Updating..." : "Update User"}
-          </button>
-        </div>
-      </form>
-    </Card>
+      )}
+    </div>
   );
 }

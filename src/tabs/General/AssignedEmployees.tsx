@@ -10,9 +10,9 @@ export default function AssignedEmployees({
   open,
   setSelectedUserId,
 }: {
-  userId: number;
-  open: boolean;
-  setSelectedUserId: Dispatch<SetStateAction<number | null>>;
+  readonly userId: number;
+  readonly open: boolean;
+  readonly setSelectedUserId: Dispatch<SetStateAction<number | null>>;
 }) {
   const [list, setList] = useState<IOrganizationChart[]>([]);
 
@@ -38,12 +38,12 @@ export default function AssignedEmployees({
         <div className="flex flex-row items-center gap-4">
           {list.length > 0 ? (
             list.map((item) => (
-              <div className="cursor-pointer" onClick={() => setSelectedUserId(item.userId)}>
+              <button key={item.userId} className="cursor-pointer" onClick={() => setSelectedUserId(item.userId)}>
                 <HirarchyCard
                   item={item}
                   key={item.userId + "_assigned"}
                 />
-              </div>
+              </button>
             ))
           ) : (
             <div className="col-span-2 text-gray-500">

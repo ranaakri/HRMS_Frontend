@@ -16,6 +16,7 @@ import { Toaster } from "sonner";
 import { employeeRoutes } from "./tabs/Routes/employee.tsx";
 import { hrRoutes } from "./tabs/Routes/hr.tsx";
 import { managerRoutes } from "./tabs/Routes/manager.tsx";
+import ForgotPassword from "./tabs/Auth/ForgotPassword.tsx";
 
 function DefaultLanding() {
   const { user } = useAuth();
@@ -64,6 +65,13 @@ const router = createBrowserRouter([
         <Logout />
       </ProtectedRoute>
     ),
+  },
+  {
+    path: "/forgot-password",
+    element: <>
+      <ForgotPassword />
+      <Toaster />
+    </>
   },
   {
     path: "/unauthorized",

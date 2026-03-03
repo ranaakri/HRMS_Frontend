@@ -22,6 +22,8 @@ import ListAllPost from "../Post/ListAllPost";
 import SearchByUsers from "../Post/SearchByUsers";
 import CalenderEvents from "../../components/custom/EventCalender.tsx";
 import Home from "../Post/Home.tsx";
+import CvReviews from "../Employee/JobReferral/CvReviews.tsx";
+import ListCvForReviews from "../Employee/JobReferral/ListCvForReview.tsx";
 
 export const managerRoutes: RouteObject = {
   path: "manager",
@@ -210,6 +212,27 @@ export const managerRoutes: RouteObject = {
               <MyReferrals />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: "cv-reviews",
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <CvReviews />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "view/:jobId",
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <ListCvForReviews />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
       ],
     },

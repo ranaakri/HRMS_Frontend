@@ -20,6 +20,8 @@ import MyShares from "../Employee/JobReferral/MyShares";
 import MyReferrals from "../Employee/JobReferral/MyReferrals";
 import UpdateJob from "../HR/JobManagement/UpdateJob";
 import CalenderEvents from "../../components/custom/EventCalender.tsx";
+import CvReviews from "../Employee/JobReferral/CvReviews.tsx";
+import ListCvForReviews from "../Employee/JobReferral/ListCvForReview.tsx";
 
 export const employeeRoutes: RouteObject = {
   path: "employee",
@@ -238,6 +240,27 @@ export const employeeRoutes: RouteObject = {
               <UpdateJob isViewOnly={true} />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: "cv-reviews",
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute requiredRole={["Employee"]}>
+                  <CvReviews />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "view/:jobId",
+              element: (
+                <ProtectedRoute requiredRole={["Employee"]}>
+                  <ListCvForReviews />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
       ],
     },

@@ -1,12 +1,12 @@
 import { useRef, useCallback } from "react";
 
 interface InfiniteScrollProps<T> {
-  data: T[];
-  renderItem: (item: T, index: number) => React.ReactNode;
-  loadMore: () => void;
-  message: string;
-  hasMore: boolean;
-  isLoading: boolean;
+  readonly data: T[];
+  readonly renderItem: (item: T, index: number) => React.ReactNode;
+  readonly loadMore: () => void;
+  readonly message: string;
+  readonly hasMore: boolean;
+  readonly isLoading: boolean;
 }
 
 export default function InfiniteScroll<T>({

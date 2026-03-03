@@ -53,17 +53,16 @@ export default function TravelCard({
   myTarvelPlan,
   homePage
 }: {
-  details: TravelPlanResponse;
-  expense: boolean;
-  myTarvelPlan: boolean;
-  homePage?:boolean;
+  readonly details: TravelPlanResponse;
+  readonly expense: boolean;
+  readonly myTarvelPlan: boolean;
+  readonly homePage?:boolean;
 }) {
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) {
       notify.error("Logged out", "Please login again");
-      return;
     }
   }, []);
 
@@ -75,9 +74,9 @@ export default function TravelCard({
           {details.travelGallery.length > 0 ? (
             <Carousel className="w-full">
               <CarouselContent>
-                {details.travelGallery.map((item, index) => (
+                {details.travelGallery.map((item) => (
                   <CarouselItem
-                    key={index}
+                    key={item.imageId}
                     className="flex items-center justify-center"
                   >
                     <img
@@ -133,23 +132,13 @@ export default function TravelCard({
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            {/* <div className="flex items-center gap-2">
-              <div className="flex flex-col">
-                <span className="text-xs font-bold text-slate-700 leading-none">
-                  {details.createdByUser.name}
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  {details.createdByUser.email}
-                </span>
-              </div>
-            </div> */}
           </div>
           
         </div>
         </div>
         <div className="">
             {user?.role === "HR" && (
-              <div className="flex m-4 justify-self-end gap-4 text-sm">
+              <div className="flex flex-wrap m-4 justify-end gap-4 text-sm">
                 <Link
                   className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
                   to={homePage ? `../travel/manage/update/${details.travelId}` :`${myTarvelPlan ? "../../" : ""}manage/update/${details.travelId}`}
@@ -187,7 +176,7 @@ export default function TravelCard({
               </div>
             )}
             {user?.role === "Employee" && (
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="flex flex-wrap m-4 justify-end gap-4 text-sm">
                 <Link
                   className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"
                   to={homePage ? `../travel/manage/expense/${details.travelId}` :`manage/expense/${details.travelId}`}
@@ -203,7 +192,7 @@ export default function TravelCard({
               </div>
             )}
             {user?.role === "Manager" && (
-              <div className="grid grid-cols-3 gap-4 text-sm">
+              <div className="flex flex-wrap m-4 justify-end gap-4 text-sm">
                 {!expense && (
                   <Link
                     className="p-2 px-4 bg-black text-white rounded-md cursor-pointer flex items-center justify-center"

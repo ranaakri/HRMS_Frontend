@@ -14,10 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 interface WarnDeleteDialogProps {
-  open: boolean;
-  postId: number | null;
-  onClose: () => void;
-  onDeleted: (postId: number) => void;
+  readonly open: boolean;
+  readonly postId: number | null;
+  readonly onClose: () => void;
+  readonly onDeleted: (postId: number) => void;
 }
 
 export default function WarnDeleteDialog({

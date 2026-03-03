@@ -67,8 +67,8 @@ export function GameSlot({
   slot,
   disable,
 }: {
-  slot: ISlots;
-  disable: boolean;
+  readonly slot: ISlots;
+  readonly disable: boolean;
 }) {
   const isPast = new Date(slot.startTime) < new Date();
 

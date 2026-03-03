@@ -12,9 +12,9 @@ import { useForm } from "react-hook-form";
 import { notify } from "./Notification";
 
 interface Props {
-  user: { userId: number; name: string };
-  travelingUsers: any[];
-  setTravelingUsers: React.Dispatch<React.SetStateAction<any[]>>;
+  readonly user: { userId: number; name: string };
+  readonly travelingUsers: any[];
+  readonly setTravelingUsers: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 export default function AddTravelingUserDialog({

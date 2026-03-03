@@ -74,7 +74,7 @@ export interface IBudget {
 export default function ExpenseList({
   isForApproval,
 }: {
-  isForApproval: boolean;
+readonly isForApproval: boolean;
 }) {
   const { travelId } = useParams();
   const [expenseList, setExpenseList] = useState<IExpenseListRes[]>([]);
@@ -169,34 +169,17 @@ export default function ExpenseList({
     onSuccess: () => {
       notify.success("Success", "Stauts updated successfully");
       setRemarks("");
-      return;
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
       setRemarks("");
-      return;
     },
   });
-
-  // const deleteExpense = useMutation({
-  //   mutationFn: async (id: number) => {
-  //     return await api.delete(`/travel/expense/${id}`).then((res) => res.data);
-  //   },
-  //   onSuccess: (_, id) => {
-  //     notify.success("Expense deleted");
-  //     setExpenseList(expenseList.filter((val) => val.expenseId != id));
-  //   },
-  //   onError: (error: any) => {
-  //     notify.error("Error", error.response.data.message);
-  //     console.error(error.response);
-  //   },
-  // });
 
   const handleApproval = async (id: number, status: string) => {
     await changeStatus.mutateAsync({ id: id, statusdata: status });
     const val = expenseList.find((val) => val.expenseId === id);
-    console.log(val);
     if (val)
       setExpenseList([
         ...expenseList.filter((val) => val.expenseId != id),
@@ -293,16 +276,6 @@ export default function ExpenseList({
                   <p className="text-sm font-mono">
                     Expense ID: {item.expenseId}
                   </p>
-                  {/* {isForApproval && (
-                    <Button
-                      variant={"destructive"}
-                      className="bg-red-300 border-red-600 border justify-self-end"
-                      onClick={() => deleteExpense.mutate(item.expenseId)}
-                      disabled={deleteExpense.isPending ? true : false}
-                    >
-                      Delete
-                    </Button>
-                  )} */}
                 </div>
                 <p className="font-semibold text-gray-800">
                   Spent Amount: {item.amount}
@@ -311,18 +284,21 @@ export default function ExpenseList({
                   <Badge className="border border-black mt-2">
                     {item.category}
                   </Badge>
-                  <Badge
-                    className={`border border-black mt-2 text-white 
-                        ${
-                          item.status === "REJECTED"
-                            ? "bg-red-300 border-red-500 "
-                            : item.status === "PENDING"
-                              ? "bg-amber-200 border-amber-500"
-                              : "bg-green-300 border-green-500"
-                        }`}
-                  >
-                    {item.status}
-                  </Badge>
+                  {(() => {
+                    const statusColor =
+                      item.status === "REJECTED"
+                        ? "bg-red-300 border-red-500 "
+                        : item.status === "PENDING"
+                          ? "bg-amber-200 border-amber-500"
+                          : "bg-green-300 border-green-500";
+                    return (
+                      <Badge
+                        className={`border border-black mt-2 text-white ${statusColor}`}
+                      >
+                        {item.status}
+                      </Badge>
+                    );
+                  })()}
                 </div>
                 <p className="">{new Date(item.expenseDate).toLocaleDateString(undefined, DateOptions)}</p>
               </div>
@@ -384,9 +360,8 @@ export default function ExpenseList({
   );
 }
 
-function ExpenseSplits({ splits }: { splits: ExpensesSplit }) {
+function ExpenseSplits({ splits }: { readonly splits: ExpensesSplit }) {
   const user = splits.travelingUser.user;
-  //   const travelingInfo = splits.travelingUser;
 
   return (
     <div className="border p-4 m-2 rounded-md">
@@ -397,18 +372,11 @@ function ExpenseSplits({ splits }: { splits: ExpensesSplit }) {
       <p className="text-sm text-gray-500">
         <b>Split Amount:</b> {splits.splitAmount}
       </p>
-      {/* <p className="text-sm text-gray-500">
-        <b>Provided Balance:</b> {travelingInfo.travelBalance}
-      </p>
-      <p className="text-sm text-gray-500">
-        <b>Remaining Balance:</b>{" "}
-        {travelingInfo.travelBalance - travelingInfo.usedBalance}
-      </p> */}
     </div>
   );
 }
 
-function UploadedBy({ user }: { user: User }) {
+function UploadedBy({ user }: { readonly user: User }) {
   return (
     <div className="bg-gray-200 shadow-md rounded-md m-2 p-4">
       <h1 className="text-gray-500 font-semibold">Uploaded By</h1>
@@ -420,7 +388,7 @@ function UploadedBy({ user }: { user: User }) {
   );
 }
 
-export function ListExpsenseProofs({ proofs }: { proofs: ExpensesProof[] }) {
+export function ListExpsenseProofs({ proofs }: { readonly proofs: ExpensesProof[] }) {
   return (
     <div className="flex flex-col p-2">
       {proofs.map((item, index) => (

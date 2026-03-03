@@ -9,18 +9,18 @@ export interface Root {
   userId: number;
 }
 
-export default function HirarchyCard({ item, isMe }: { item: Root, isMe?: boolean }) {
+export default function HirarchyCard({ item, isMe }: { readonly item: Root, readonly isMe?: boolean }) {
   return (
     <div className="max-w-50 min-w-50">
       <div className={`p-5 md:px-10 grid grid-cols-1 justify-items-center bg-gray-100 rounded-lg shadow-md border-t-6 ${isMe? "border-yellow-400" : "border-blue-400"} gap-2`}>
         <img
           src={
-            ((item.profileUrl && item.profileUrl.trim().length === 0) ||
+            ((item.profileUrl?.trim().length === 0) ||
             item.profileUrl === null)
               ? "https://betterwaterquality.com/wp-content/uploads/2020/09/dummy-profile-pic-300x300-1-1.png"
               : item.profileUrl
           }
-          alt="no image"
+          alt="no data"
           className="w-24 h-24 rounded-full object-cover"
         />
         <p className="font-bold">{item.name}</p>

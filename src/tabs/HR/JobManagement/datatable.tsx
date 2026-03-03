@@ -26,11 +26,11 @@ import { useNavigate } from "react-router-dom";
 import { IoMdAdd } from "react-icons/io";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  searchOn: string;
-  addButton: boolean;
-  addButtonNav: string;
+  readonly columns: ColumnDef<TData, TValue>[];
+  readonly data: TData[];
+  readonly searchOn: string;
+  readonly addButton: boolean;
+  readonly addButtonNav: string;
 }
 
 export function DataTable<TData, TValue>({

@@ -28,92 +28,92 @@ export const DateOptions: Intl.DateTimeFormatOptions = {
   second: "numeric",
   hour12: true,
 };
-
+const columns: ColumnDef<JobResponse>[] = [
+  {
+    accessorKey: "title",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Title
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+  },
+  {
+    accessorKey: "lastApplicationDate",
+    header: "Last Application Date",
+    cell: ({ row }) => {
+      return (
+        <div className="">
+          {new Date(row.original.lastApplicationDate).toLocaleDateString(
+            undefined,
+            DateOptions,
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Created At",
+    cell: ({ row }) => {
+      return (
+        <div className="">
+          {new Date(row.original.createdAt).toLocaleDateString(
+            undefined,
+            DateOptions,
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    header: "Action",
+    cell: ({ row }) => {
+      const rowdata = row.original;
+      return (
+        <div className="flex justify-center items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <IoMdMenu />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-white">
+              <DropdownMenuGroup>
+                <DropdownMenuItem>
+                  <FaRegEye />
+                  <Link to={`view/${rowdata.jobId}`}>View</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem variant={"default"}>
+                  <FaEdit />
+                  <Link to={`update/${rowdata.jobId}`}>Update</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <FaShare />
+                  <Link to={`shares/${rowdata.jobId}`}>Shares</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <RiUserSharedLine />
+                  <Link to={`referrals/${rowdata.jobId}`}>Referrals</Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      );
+    },
+  },
+];
 export default function ListJobs() {
-  const columns: ColumnDef<JobResponse>[] = [
-    {
-      accessorKey: "title",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Title
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-    },
-    {
-      accessorKey: "lastApplicationDate",
-      header: "Last Application Date",
-      cell: ({ row }) => {
-        return (
-          <div className="">
-            {new Date(row.original.lastApplicationDate).toLocaleDateString(
-              undefined,
-              DateOptions,
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Created At",
-      cell: ({ row }) => {
-        return (
-          <div className="">
-            {new Date(row.original.createdAt).toLocaleDateString(
-              undefined,
-              DateOptions,
-            )}
-          </div>
-        );
-      },
-    },
-    {
-      header: "Action",
-      cell: ({ row }) => {
-        const rowdata = row.original;
-        return (
-          <div className="flex justify-center items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline"><IoMdMenu /></Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem>
-                    <FaRegEye />
-                    <Link to={`view/${rowdata.jobId}`}>View</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem variant={"default"}>
-                    <FaEdit />
-                    <Link to={`update/${rowdata.jobId}`}>Update</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <FaShare />
-                    <Link to={`shares/${rowdata.jobId}`}>Shares</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <RiUserSharedLine />
-                    <Link to={`referrals/${rowdata.jobId}`}>Referrals</Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        );
-      },
-    },
-  ];
-
   const { isLoading, isError, error, data } = useQuery({
     queryKey: ["listOfJobs"],
     queryFn: () =>
@@ -134,7 +134,10 @@ export default function ListJobs() {
         List Jobs
       </h2>
       <div className="flex">
-        <Link to={"share"} className="p-2 px-4 bg-black text-white rounded-md flex gap-2 items-center justify-center">
+        <Link
+          to={"share"}
+          className="p-2 px-4 bg-black text-white rounded-md flex gap-2 items-center justify-center"
+        >
           <FaShare /> Share a Job
         </Link>
       </div>
