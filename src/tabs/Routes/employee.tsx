@@ -22,6 +22,7 @@ import UpdateJob from "../HR/JobManagement/UpdateJob";
 import CalenderEvents from "../../components/custom/EventCalender.tsx";
 import CvReviews from "../Employee/JobReferral/CvReviews.tsx";
 import ListCvForReviews from "../Employee/JobReferral/ListCvForReview.tsx";
+import MentionedPost from "../Post/MentionedPost.tsx";
 
 export const employeeRoutes: RouteObject = {
   path: "employee",
@@ -182,6 +183,14 @@ export const employeeRoutes: RouteObject = {
           element: (
             <ProtectedRoute requiredRole={["Employee"]}>
               <EditPost />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "mentions",
+          element: (
+            <ProtectedRoute requiredRole={["Manager"]}>
+              <MentionedPost />
             </ProtectedRoute>
           ),
         },

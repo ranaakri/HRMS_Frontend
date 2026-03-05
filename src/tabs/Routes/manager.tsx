@@ -24,6 +24,7 @@ import CalenderEvents from "../../components/custom/EventCalender.tsx";
 import Home from "../Post/Home.tsx";
 import CvReviews from "../Employee/JobReferral/CvReviews.tsx";
 import ListCvForReviews from "../Employee/JobReferral/ListCvForReview.tsx";
+import MentionedPost from "../Post/MentionedPost.tsx";
 
 export const managerRoutes: RouteObject = {
   path: "manager",
@@ -275,6 +276,14 @@ export const managerRoutes: RouteObject = {
               <EditPost />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: "mentions",
+          element: (
+            <ProtectedRoute requiredRole={["Manager"]} >
+              <MentionedPost />
+            </ProtectedRoute>
+          )
         },
         {
           path: "search",

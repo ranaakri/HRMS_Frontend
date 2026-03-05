@@ -9,6 +9,12 @@ import { Button } from "../ui/button";
 import { MdDelete } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import { useConfirm } from "@/hooks/usecontirm";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface Author {
   email: string;
@@ -24,6 +30,11 @@ export interface Comment {
   user: Author;
 }
 
+export interface Mention {
+  name: string;
+  email: string
+}
+
 export interface PostResponse {
   author: Author | null;
   commentCount: number;
@@ -36,6 +47,7 @@ export interface PostResponse {
   postType: string;
   tags: string;
   title: string;
+  mentions: Mention[];
   visibleToEmp: boolean;
   visibleToManager: boolean;
   likes?: Author[];
@@ -242,7 +254,23 @@ export default function PostBox({
           )}
 
           <div>{post.description}</div>
-          <div>{post.tags}</div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <TooltipProvider>
+              {post.mentions?.map((mention) => (
+                <Tooltip key={mention.email}>
+                  <TooltipTrigger asChild>
+                    <span className="text-blue-500 text-sm font-medium">
+                      @{mention.name}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-black text-white">
+                    <p>{mention.email}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </TooltipProvider>
+          </div>
+          <div className="text-gray-500 text-sm mt-1">{post.tags}</div>
         </div>
 
         <hr className="my-4 text-gray-300" />

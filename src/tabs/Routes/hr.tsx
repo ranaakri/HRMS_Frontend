@@ -34,6 +34,7 @@ import EditPost from "../Post/EditPost";
 import SearchByUsers from "../Post/SearchByUsers";
 import CalenderEvents from "../../components/custom/EventCalender.tsx";
 import ListAllDepartments from "../HR/ManageDepartment/ListAllDeoartments.tsx";
+import MentionedPost from "../Post/MentionedPost.tsx";
 
 export const hrRoutes: RouteObject = {
   path: "hr",
@@ -399,6 +400,14 @@ export const hrRoutes: RouteObject = {
               <EditPost />
             </ProtectedRoute>
           ),
+        },
+        {
+          path: "mentions",
+          element: (
+            <ProtectedRoute requiredRole={["HR"]} >
+              <MentionedPost />
+            </ProtectedRoute>
+          )
         },
         {
           path: "search",

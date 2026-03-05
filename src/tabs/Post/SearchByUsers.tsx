@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ListAllPost from "./ListAllPost";
 
-
 export default function SearchByUsers() {
   const [search, setSearch] = useState("");
   const [userList, setUserList] = useState<IUserList[]>([]);
@@ -49,11 +48,11 @@ export default function SearchByUsers() {
   };
 
   const handleTagSearch = () => {
-    if(!tag || tag.trim().length <= 0){
+    if (!tag || tag.trim().length <= 0) {
       notify.error("Error", "Tags can not be empty");
       return;
     }
-    if(tag.length < 2) return
+    if (tag.length < 2) return;
     if (tag && !tag.startsWith("#")) {
       notify.error("Error", "Tags must start with #");
       return;
@@ -62,7 +61,10 @@ export default function SearchByUsers() {
   };
 
   const hasFilter =
-    selectedUserId !== null || startDate !== "" || endDate !== "" || appliedTag !== null;
+    selectedUserId !== null ||
+    startDate !== "" ||
+    endDate !== "" ||
+    appliedTag !== null;
 
   return (
     <div>
@@ -98,9 +100,7 @@ export default function SearchByUsers() {
           onChange={(e) => setTag(e.target.value)}
         />
 
-        <Button onClick={handleTagSearch}>
-          Search Tag
-        </Button>
+        <Button onClick={handleTagSearch}>Search Tag</Button>
 
         <Button variant="outline" onClick={handleClear}>
           Clear
@@ -110,14 +110,17 @@ export default function SearchByUsers() {
       {userList.map((user) => (
         <Card
           key={user.userId}
-          className="p-3 min-w-2xl flex flex-row justify-between justify-self-center items-center bg-white my-2"
+          className="p-3 flex flex-row justify-between items-center bg-white border-gray-100 hover:border-black transition-all min-w-3xl mt-2 justify-self-center"
         >
           <div>
             <p className="font-semibold">{user.name}</p>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
-
-          <Button onClick={() => handleUserSelect(user)}>
+          <Button
+            variant="outline"
+            className="cursor-pointer hover:bg-black hover:text-white"
+            onClick={() => handleUserSelect(user)}
+          >
             Select
           </Button>
         </Card>

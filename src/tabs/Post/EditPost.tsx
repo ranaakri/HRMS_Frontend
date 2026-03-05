@@ -1,12 +1,14 @@
 import api from "@/api/api";
+import type { IUserList } from "@/components/custom/AddUserToTravel";
 import { notify } from "@/components/custom/Notification";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
+import { useDebounce } from "@/hook/DebounceHoot";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useForm } from "react-hook-form";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -16,6 +18,7 @@ export interface CreatePost {
   tags: string;
   postType: string;
   imagePath: string;
+  mentions: number[];
   publicId: string;
   authorId: number;
   visibleToManager: boolean;
@@ -27,6 +30,12 @@ export interface DocUpload {
   publicId: string;
 }
 
+export interface User {
+  userId: number;
+  name: string;
+  email: string;
+}
+
 export default function EditPost() {
   const { user } = useAuth();
   const { postId } = useParams();
@@ -35,6 +44,8 @@ export default function EditPost() {
   const [postType, setPostType] = useState<"Image" | "Text">("Text");
   const [emp, setEmp] = useState(true);
   const [manager, setManager] = useState(true);
+
+  const [mentions, setMention] = useState<User[]>([]);
 
   const [selectedFile, setSelectedFile] = useState<File | undefined>();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -63,6 +74,9 @@ export default function EditPost() {
 
       setEmp(postDetails.visibleToEmp);
       setManager(postDetails.visibleToManager);
+      setMention(postDetails.mentions || [])
+
+      console.log(postDetails.mentions)
 
       if (postDetails.postType === "I") {
         setPostType("Image");
@@ -127,6 +141,7 @@ export default function EditPost() {
         authorId: user.userId,
         visibleToEmp: emp,
         visibleToManager: manager,
+        mentions: mentions.map((val) => val.userId),
       };
 
 
@@ -137,7 +152,7 @@ export default function EditPost() {
   };
 
   return (
-    <div className="flex justify-center bg-gray-50 py-10">
+    <div className="flex justify-center py-10">
       <Card className="w-full max-w-2xl p-6 md:p-8 bg-white shadow-lg rounded-2xl border">
         <h2 className="text-2xl font-semibold mb-6 text-gray-800">Edit Post</h2>
 
@@ -240,6 +255,10 @@ export default function EditPost() {
             </div>
           </div>
 
+          <div className="">
+            <AddUserToMention mentions={mentions} setMention={setMention} />
+          </div>
+
           <Button
             type="submit"
             disabled={updatePost.isPending || addImage.isPending}
@@ -249,6 +268,110 @@ export default function EditPost() {
           </Button>
         </form>
       </Card>
+    </div>
+  );
+}
+
+function AddUserToMention({
+  mentions,
+  setMention,
+}: {
+  mentions: User[];
+  setMention: Dispatch<SetStateAction<User[]>>;
+}) {
+  const { user } = useAuth();
+  const [search, setSearch] = useState("");
+  const [userList, setUserList] = useState<IUserList[]>([]);
+
+  useEffect(() => {
+    if (!user) {
+      notify.error("Logged out", "Please login again");
+      return;
+    }
+  }, [user]);
+
+  const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    if (!user) {
+      notify.error("Logged out", "Please login again");
+      return;
+    }
+
+    if (debouncedSearch.length < 2) {
+      setUserList([]);
+      return;
+    }
+
+    api
+      .get(`/users/list?name=${debouncedSearch}`)
+      .then((res) =>
+        setUserList(res.data.filter((val: any) => val.userId != user.userId)),
+      )
+      .catch(() => notify.error("Error", "Failed to fetch users"));
+  }, [debouncedSearch]);
+
+  const handleRemoveGamePartner = (userId: number) => {
+    if (userId === user?.userId) {
+      notify.error("Error", "Can not remove your self from game");
+      return;
+    }
+    setMention((prev) => prev.filter((val) => val.userId != userId));
+  };
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Search partners by name..."
+        value={search}
+        className="bg-white border-gray-200 focus:ring-black"
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {userList.map((user) => (
+        <Card
+          key={user.userId}
+          className="p-3 flex flex-row justify-between items-center bg-white border-gray-100 hover:border-black transition-all"
+        >
+          <div>
+            <p className="font-semibold">{user.name}</p>
+            <p className="text-sm text-gray-500">{user.email}</p>
+          </div>
+          <Button
+            variant="outline"
+            className="cursor-pointer hover:bg-black hover:text-white"
+            onClick={() => {
+              if (mentions.some((val) => val.userId === user.userId)) {
+                notify.error("Error", "Users has been already added");
+                return;
+              }
+              setMention((prev) => [...prev, user]);
+              setSearch("");
+            }}
+            type="button"
+          >
+            Add
+          </Button>
+        </Card>
+      ))}
+
+      {mentions.length > 0 && (
+        <div>
+          <h3 className="font-bold text-lg">Mentions</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {mentions.map((u) => (
+              <Button
+                className="text-blue-700 border-blue-500 border"
+                onClick={() => handleRemoveGamePartner(u.userId)}
+                type="button"
+              >
+                @{u.name}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

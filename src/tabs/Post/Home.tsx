@@ -1,39 +1,53 @@
 import { FaCameraRetro, FaHome, FaRegPlusSquare } from "react-icons/fa";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { IoSearch } from "react-icons/io5";
 
 export default function Home() {
+  const location = useLocation();
+  const currentPath = location.pathname.split("/").pop();
+
+  const navItems = [
+    { to: ".", icon: <FaHome className="size-5" />, key: "post" },
+    { to: "add", icon: <FaRegPlusSquare className="size-5" />, key: "add" },
+    { to: "search", icon: <IoSearch className="size-5" />, key: "search" },
+    { to: "mypost", icon: <FaCameraRetro className="size-5" />, key: "mypost" },
+    {
+      to: "mentions",
+      icon: <span className="text-xl font-bold leading-none">@</span>,
+      key: "mentions",
+    },
+  ];
+
+  const isActive = (to: string, key: string) => {
+    if (to === "." && (currentPath === "post" || currentPath === "")) return true;
+    return currentPath === key;
+  };
+
   return (
-    <div className="min-h-screen relative pb-24">
-      <Outlet />
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 md:translate-x-0 bg-black text-white shadow-xl rounded-full px-10 py-3 flex gap-10 border z-50">
-        <Link
-          to={"."}
-          className="cursor-pointer hover:text-blue-500 transition"
-        >
-          <FaHome className="size-5" />
-        </Link>
+    <div className="min-h-screen relative pb-28">
+      <div className="max-w-4xl mx-auto pt-6">
+        <Outlet />
+      </div>
 
-        <Link
-          to={"add"}
-          className="cursor-pointer hover:text-blue-500 transition"
-        >
-          <FaRegPlusSquare className="size-5" />
-        </Link>
-
-        <Link
-          to={"search"}
-          className="cursor-pointer hover:text-blue-500 transition"
-        >
-          <IoSearch className="size-5" />
-        </Link>
-
-        <Link
-          to={"mypost"}
-          className="cursor-pointer hover:text-blue-500 transition"
-        >
-          <FaCameraRetro className="size-5" />
-        </Link>
+      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50">
+        <nav className="bg-black/90 backdrop-blur-md text-white shadow-2xl rounded-full px-8 py-3 flex items-center gap-8 border border-white/10">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              to={item.to}
+              className={`relative p-2 transition-all duration-300 ease-in-out hover:scale-110 ${
+                isActive(item.to, item.key)
+                  ? "text-blue-400"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              {item.icon}
+              {isActive(item.to, item.key) && (
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-400 rounded-full" />
+              )}
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );
