@@ -171,20 +171,20 @@ export default function BookSlot() {
     );
   } else {
     bookingListData = (
-      <div className="">
-        <div className="text-gray-500 text-xl mb-2 overflow-auto">Bookings</div>
+      <div className="p-4">
+        <h3 className="text-gray-800 font-bold text-xl mb-4 border-b pb-2">Bookings</h3>
         {bookingsData.length > 0 ? (
           bookingsData.map((item, index) => (
             <div
-              className="flex items-center bg-black text-white shadow-md rounded-md p-2 m-2"
+              className="flex items-center bg-white border border-gray-200 text-black shadow-sm rounded-md p-3 mb-2 transition-colors"
               key={item.requestId}
             >
-              <p className="mr-5">{index + 1}.</p>
+              <p className="mr-4 font-mono text-gray-400">{index + 1}.</p>
               <BookingCard item={item} />
             </div>
           ))
         ) : (
-          <div className="">No Bookings</div>
+          <div className="text-gray-400 text-center py-10">No Bookings</div>
         )}
       </div>
     );
@@ -196,40 +196,34 @@ export default function BookSlot() {
     if (hasBooking) {
       if (getStatus.isLoading) return <div>Loading status...</div>;
       return (
-        <div className="p-4 border rounded bg-blue-50">
+        <div className="p-6 border rounded-lg bg-gray-50">
           {getStatus.data ? (
             <div className="">
               <div className="flex justify-between items-center">
-                <span className="font-bold">
-                  Your Booking Status: {getStatus.data.status || "PENDING"}
+                <span className="font-bold text-lg">
+                  Status: <span className="text-black uppercase">{getStatus.data.status || "PENDING"}</span>
                 </span>
                 {getStatus.data.status !== "DELETED" &&
                   getStatus.data.requestBy.userId === user?.userId &&
                   slotInfo.startTime &&
                   new Date() < new Date(slotInfo.startTime) && (
-                    <Button
-                      variant={"destructive"}
-                      className="bg-red-400 ml-5"
-                      type="button"
-                      onClick={() => deleteBooking.mutate()}
-                      disabled={deleteBooking.isPending}
-                    >
-                      Delete
+                    <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => deleteBooking.mutate()} disabled={deleteBooking.isPending}>
+                      Cancel Booking
                     </Button>
                   )}
               </div>
-              <div className="flex mt-2 gap-4">
+              <div className="flex flex-wrap mt-4 gap-2">
                 {bookingPartners.isSuccess && gamePartner.length > 0 ? (
                   gamePartner.map((item) => (
                     <div
-                      className="p-2 bg-white rounded-md border"
+                      className="px-3 py-1 bg-white rounded-full border text-sm font-medium"
                       key={item.userId + "_user"}
                     >
                       {item.name}
                     </div>
                   ))
                 ) : (
-                  <div className="">No game partners found</div>
+                  <div className="text-gray-400 text-sm">No game partners found</div>
                 )}
               </div>
             </div>
@@ -255,23 +249,23 @@ export default function BookSlot() {
   };
 
   return (
-    <Card className="grid grid-cols-1 md:grid-cols-3 p-2 min-h-full bg-white">
+    <Card className="grid grid-cols-1 md:grid-cols-3 min-h-full bg-white border-0 shadow-lg overflow-hidden">
       <div className="col-span-2">
-        <div className="flex flex-col gap-2 border-r p-5 min-h-full">
+        <div className="flex flex-col gap-6 border-r border-gray-100 p-6 md:p-10 min-h-full">
           <GamesCard game={data} slot={slotInfo} active={false} />
           {renderBookingAction()}
         </div>
       </div>
-      <div className="">{bookingListData}</div>
+      <div className="bg-gray-50/50">{bookingListData}</div>
     </Card>
   );
 }
 
 function BookingCard({ item }: { readonly item: BookingResponse }) {
   return (
-    <div className="bg-black text-white">
-      <p>{item.requestedBy.name}</p>
-      <p>{item.requestedBy.email}</p>
+    <div className="">
+      <p className="font-semibold text-sm">{item.requestedBy.name}</p>
+      <p className="text-xs text-gray-500">{item.requestedBy.email}</p>
     </div>
   );
 }
@@ -286,39 +280,38 @@ function GamesCard({
   readonly slot: SlotInfo;
 }) {
   return (
-    <Card className="shadow-none border-0 p-5 md:p-10">
-      <div className="font-bold text-2xl text-gray-700">{game.name}</div>
-      <div className="flex items-center gap-4">
-        <p className="">
-          <b>Min. Palyers:</b> {game.minPlayers}
+    <div className="space-y-4">
+      <h2 className="font-black text-4xl tracking-tight text-black uppercase">{game.name}</h2>
+      <div className="grid grid-cols-2 gap-4 py-4 border-y border-gray-100">
+        <p className="text-sm text-gray-600">
+          <b className="text-black block">Min. Players</b> {game.minPlayers}
         </p>
-        <p className="">
-          <b>Max. Palyers:</b> {game.maxPlayers}
+        <p className="text-sm text-gray-600">
+          <b className="text-black block">Max. Players</b> {game.maxPlayers}
         </p>
-      </div>
-      <div className="">
-        <b>Slot Duration:</b> {game.slotDuration}
-      </div>
-      <div className="flex items-center gap-4">
-        <p className="">
-          <b>Opening Time:</b> {game.openTime}
+        <p className="text-sm text-gray-600">
+          <b className="text-black block">Duration</b> {game.slotDuration} mins
         </p>
-        <p className="">
-          <b>Closing Time:</b> {game.closeTime}
+        <p className="text-sm text-gray-600">
+          <b className="text-black block">Game Hours</b> {game.openTime} - {game.closeTime}
         </p>
       </div>
-      <div className="flex items-center gap-4">
-        <p className="">
-          <b>Slot Start time:</b>{" "}
-          {new Date(slot.startTime).toLocaleTimeString(undefined, DateOptions)}
-        </p>
-        <p className="">
-          <b>Slot Closing Time:</b>{" "}
-          {new Date(slot.endTime).toLocaleTimeString(undefined, DateOptions)}
-        </p>
+      <div className="bg-gray-600 text-white p-4 rounded-lg flex justify-between items-center">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest opacity-70">Start Time</p>
+          <p className="text-lg font-bold">
+            {new Date(slot.startTime).toLocaleTimeString(undefined, DateOptions)}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] uppercase tracking-widest opacity-70">End Time</p>
+          <p className="text-lg font-bold">
+            {new Date(slot.endTime).toLocaleTimeString(undefined, DateOptions)}
+          </p>
+        </div>
       </div>
       {active && <div className="">{game.active}</div>}
-    </Card>
+    </div>
   );
 }
 
@@ -424,25 +417,26 @@ function AddUserToGame({
   };
 
   return (
-    <div className="">
+    <div className="space-y-4">
       <Input
-        placeholder="Search users..."
+        placeholder="Search partners by name..."
         value={search}
-        className="bg-white"
+        className="bg-white border-gray-200 focus:ring-black"
         onChange={(e) => setSearch(e.target.value)}
       />
 
       {userList.map((user) => (
         <Card
           key={user.userId}
-          className="p-3 flex flex-row justify-between items-center bg-white my-2"
+          className="p-3 flex flex-row justify-between items-center bg-white border-gray-100 hover:border-black transition-all"
         >
           <div>
             <p className="font-semibold">{user.name}</p>
             <p className="text-sm text-gray-500">{user.email}</p>
           </div>
           <Button
-            className="cursor-pointer"
+            variant="outline"
+            className="cursor-pointer hover:bg-black hover:text-white"
             onClick={() => {
               if (gamePartner.length + 1 > max) {
                 notify.error("Error", "Maximum player reached");
@@ -461,7 +455,7 @@ function AddUserToGame({
       ))}
 
       {gamePartner.length > 0 && (
-        <>
+        <div>
           <h3 className="font-bold text-lg">Selected Users</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -477,14 +471,17 @@ function AddUserToGame({
             ))}
           </div>
 
-          <Button
+          
+          <div className="">
+            <Button
             onClick={() => handleBooking()}
             disabled={bookSlot.isPending}
-            className="bg-black text-white mt-2"
+            className="bg-black text-white hover:bg-gray-900 mt-4"
           >
-            {bookSlot.isPending ? "Booking..." : "Book slot"}
+            {bookSlot.isPending ? "Processing..." : "Confirm Booking"}
           </Button>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

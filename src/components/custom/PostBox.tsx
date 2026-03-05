@@ -8,6 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "../ui/button";
 import { MdDelete } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { useConfirm } from "@/hooks/usecontirm";
 
 export interface Author {
   email: string;
@@ -64,6 +65,7 @@ export default function PostBox({
 }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { confirm, ConfirmComponent } = useConfirm();
 
   const [likeCounts, setLikeCounts] = useState(post.likeCount);
   const [commentCounts, setCommentCounts] = useState(post.commentCount);
@@ -135,6 +137,12 @@ export default function PostBox({
     },
   });
 
+  const handleDeletePost = async () => {
+    if (!(await confirm("Are you sure you want to delete post"))) return;
+
+    await deletePost.mutateAsync();
+  };
+
   const handleLike = async () => {
     if (!user) return;
 
@@ -189,7 +197,7 @@ export default function PostBox({
               <Button
                 type="button"
                 className="text-red hover:bg-red-500 hover:text-white"
-                onClick={async () => await deletePost.mutateAsync()}
+                onClick={async () => handleDeletePost()}
               >
                 <MdDelete />
               </Button>
@@ -219,7 +227,6 @@ export default function PostBox({
 
           {post.postType === "I" && (
             <div className="relative my-4 w-full max-h-125 flex items-center justify-center overflow-hidden rounded-xl">
-
               <img
                 src={post.imagePath}
                 alt="blur-bg"
@@ -262,6 +269,7 @@ export default function PostBox({
           </button>
         </div>
       </div>
+      {ConfirmComponent}
     </div>
   );
 }

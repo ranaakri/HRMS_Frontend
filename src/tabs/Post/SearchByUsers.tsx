@@ -49,6 +49,11 @@ export default function SearchByUsers() {
   };
 
   const handleTagSearch = () => {
+    if(!tag || tag.trim().length <= 0){
+      notify.error("Error", "Tags can not be empty");
+      return;
+    }
+    if(tag.length < 2) return
     if (tag && !tag.startsWith("#")) {
       notify.error("Error", "Tags must start with #");
       return;

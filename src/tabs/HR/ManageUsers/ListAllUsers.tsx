@@ -3,6 +3,8 @@ import type { ApiError } from "@/api/axiosError";
 import { notify } from "@/components/custom/Notification";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hook/DebounceHoot";
 import { useConfirm } from "@/hooks/usecontirm";
 import InfiniteScroll from "@/tabs/Post/InfiniteScroll";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -43,6 +45,9 @@ export default function ListAllUsers() {
   const [usersList, setUsersList] = useState<Users[]>([]);
   const [department, setDepartment] = useState<number | null>(null);
 
+  const [search, setSearch] = useState<string>("");
+  const debouncedSearch = useDebounce(search, 500);
+
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -60,9 +65,24 @@ export default function ListAllUsers() {
       if (department !== 0 && department !== null) {
         params.append("department", department.toString());
       }
-      return await api.get(`/users/list/all?${params}`).then((res) => res.data) || [];
+      if (search.length > 1)
+        return (
+          (await api
+            .get(`/users/name/list/${search}?${params}`)
+            .then((res) => res.data)) || []
+        );
+      else
+        return (
+          (await api
+            .get(`/users/list/all?${params}`)
+            .then((res) => res.data)) || []
+        );
     },
   });
+
+  useEffect(() => {
+    usersListQuery.refetch();
+  }, [debouncedSearch]);
 
   const departmentQuery = useQuery<IDepartments[], ApiError>({
     queryKey: ["fetchAllDepartments"],
@@ -148,8 +168,9 @@ export default function ListAllUsers() {
           </Link>
         </div>
         <div className="">
-          <div className="">
-            <label htmlFor="department" className="text-gray-500 mb-4">
+          <div className="flex gap-4 flex-col md:flex-row items-end">
+            <div className="">
+              <label htmlFor="department" className="text-gray-500 mb-4">
               Department
             </label>
             <select
@@ -165,6 +186,8 @@ export default function ListAllUsers() {
                 </option>
               ))}
             </select>
+            </div>
+            <Input type="text" onChange={(e) => setSearch(e.target.value)} placeholder="Search by name..." />
           </div>
         </div>
         {usersListQuery.isLoading && page === 0 ? (

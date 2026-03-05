@@ -48,7 +48,7 @@ export default function AddGame() {
       <h2 className="text-2xl font-bold text-gray-500 bg-white">Create Game</h2>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+        className="md:grid md:grid-cols-2 flex flex-col gap-4"
       >
         <div className="">
           <label htmlFor="title">Game Title</label>

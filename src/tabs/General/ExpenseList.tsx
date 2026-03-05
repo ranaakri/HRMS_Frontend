@@ -74,7 +74,7 @@ export interface IBudget {
 export default function ExpenseList({
   isForApproval,
 }: {
-readonly isForApproval: boolean;
+  readonly isForApproval: boolean;
 }) {
   const { travelId } = useParams();
   const [expenseList, setExpenseList] = useState<IExpenseListRes[]>([]);
@@ -88,6 +88,8 @@ readonly isForApproval: boolean;
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState(new Date().toISOString());
   const [status, setStatus] = useState("");
+
+  const [search, setSearch] = useState("");
 
   const travelingUserBudget = useQuery({
     queryKey: ["myBudget", travelId, user?.userId],
@@ -143,6 +145,23 @@ readonly isForApproval: boolean;
       setExpenseList(data);
     }
   }, [data]);
+
+  useEffect(() => {
+    if (data && search.length > 1) {
+      setExpenseList((prev) =>
+        prev.filter((val) =>
+          val.expensesSplits.some((split) =>
+            split.travelingUser.user.name
+              .toLowerCase()
+              .includes(search.toLowerCase()),
+          ),
+        ),
+      );
+      console.log(search)
+    }else if(data){
+      setExpenseList(data);
+    }
+  }, [search]);
 
   useEffect(() => {
     if (data && status.length > 0) {
@@ -215,7 +234,7 @@ readonly isForApproval: boolean;
                 </Link>
               </div>
             )}
-            <div className="mt-4 flex gap-4">
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select onValueChange={(value) => setStatus(value)}>
                 <SelectTrigger className="w-full max-w-48">
                   <SelectValue placeholder="Select Status" />
@@ -231,19 +250,26 @@ readonly isForApproval: boolean;
                 </SelectContent>
               </Select>
               {user?.role === "HR" && (
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-col md:flex-row">
                   <Input
                     type="date"
                     value={startDate}
-                    className="bg-white"
+                    className="bg-white min-w-fit"
                     onChange={(e) => setStartDate(e.target.value)}
                   />
 
                   <Input
                     type="date"
                     value={endDate}
-                    className="bg-white"
+                    className="bg-white min-w-fit"
                     onChange={(e) => setEndDate(e.target.value)}
+                  />
+
+                  <Input
+                    type="text"
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name..."
+                    className="min-w-fit"
                   />
                 </div>
               )}
@@ -300,7 +326,12 @@ readonly isForApproval: boolean;
                     );
                   })()}
                 </div>
-                <p className="">{new Date(item.expenseDate).toLocaleDateString(undefined, DateOptions)}</p>
+                <p className="">
+                  {new Date(item.expenseDate).toLocaleDateString(
+                    undefined,
+                    DateOptions,
+                  )}
+                </p>
               </div>
               <div className="">
                 <ListExpsenseProofs proofs={item.expensesProofs} />
@@ -388,7 +419,11 @@ function UploadedBy({ user }: { readonly user: User }) {
   );
 }
 
-export function ListExpsenseProofs({ proofs }: { readonly proofs: ExpensesProof[] }) {
+export function ListExpsenseProofs({
+  proofs,
+}: {
+  readonly proofs: ExpensesProof[];
+}) {
   return (
     <div className="flex flex-col p-2">
       {proofs.map((item, index) => (

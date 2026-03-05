@@ -51,6 +51,7 @@ export default function ImageContainer({
           variant={"destructive"}
           className="bg-red-400 border-red-600 hover:bg-red-600 duration-200 cursor-pointer absolute top-2 end-2 rounded-full"
           onClick={handleDelete}
+          disabled={deleteImage.isPending}
         >
           <MdDelete />
         </Button>

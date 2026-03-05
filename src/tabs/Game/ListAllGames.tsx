@@ -2,11 +2,11 @@ import api from "@/api/api";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { MdAdd } from "react-icons/md";
-import { FaBookmark, FaRegStar } from "react-icons/fa";
+import { MdAdd, MdDelete } from "react-icons/md";
+import { FaBookmark, FaEdit, FaRegStar } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
 import { notify } from "@/components/custom/Notification";
 import { useConfirm } from "@/hooks/usecontirm";
@@ -88,7 +88,11 @@ export default function ListAllGames({
       <div className="grid grid-cols-1 gap-4">
         {filteredGames.length > 0 ? (
           filteredGames.map((item) => (
-            <GamesCard game={item} key={item.gameId} />
+            <GamesCard
+              game={item}
+              key={item.gameId}
+              activeGames={activeGames}
+            />
           ))
         ) : (
           <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-lg">
@@ -100,12 +104,19 @@ export default function ListAllGames({
   );
 }
 
-function GamesCard({ game }: { readonly game: Games; }) {
+function GamesCard({
+  game,
+  activeGames,
+}: {
+  readonly game: Games;
+  readonly activeGames: boolean;
+}) {
   const { user } = useAuth();
   const [fav, setFav] = useState(game.favourite);
   const { confirm, ConfirmComponent } = useConfirm();
-
   const [interest, setInterest] = useState<boolean>(game.interested);
+
+  const queryClient = useQueryClient();
 
   const addAsInterest = useMutation({
     mutationFn: async (data: GameInterest) => {
@@ -128,6 +139,22 @@ function GamesCard({ game }: { readonly game: Games; }) {
     },
     onSuccess: () => {
       notify.success("Success!!", "Game is removed from interest");
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+    },
+  });
+
+  const deleteGame = useMutation({
+    mutationFn: async () => {
+      return await api.delete(`/game/${game.gameId}`).then((res) => res.data);
+    },
+    onSuccess: () => {
+      notify.success("Deleted!!", "Game deleted successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["ListGames", activeGames, user?.userId],
+      });
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
@@ -167,6 +194,11 @@ function GamesCard({ game }: { readonly game: Games; }) {
     },
   });
 
+  const handleDeleteGame = async () => {
+    if (!(await confirm("Are you sure you want to remove game"))) return;
+    await deleteGame.mutateAsync();
+  };
+
   const handleSetInterest = async () => {
     if (!user) {
       notify.error("Logged out", "Please login again");
@@ -190,7 +222,8 @@ function GamesCard({ game }: { readonly game: Games; }) {
       ))
     )
       return;
-    removeAsInterest.mutateAsync({
+
+    await removeAsInterest.mutateAsync({
       userId: user?.userId,
       gameId: game.gameId,
     });
@@ -256,24 +289,33 @@ function GamesCard({ game }: { readonly game: Games; }) {
               variant="destructive"
               className="text-red-500 bg-red-200 border border-red-500"
               size="sm"
-              onClick={() => handleRemoveInterest()}
+              onClick={handleRemoveInterest}
             >
               Remove Interest
             </Button>
           ) : (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => handleSetInterest()}
-            >
+            <Button variant="secondary" size="sm" onClick={handleSetInterest}>
               Add Interest
             </Button>
           )}
 
           {user?.role === "HR" && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link to={`update/${game.gameId}`}>Update</Link>
-            </Button>
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to={`update/${game.gameId}`}>
+                  <FaEdit />
+                </Link>
+              </Button>
+
+              <Button
+                variant="destructive"
+                size="icon"
+                onClick={handleDeleteGame}
+                className="cursor-pointer"
+              >
+                <MdDelete className="h-4 w-4 text-black" />
+              </Button>
+            </>
           )}
         </div>
       </div>

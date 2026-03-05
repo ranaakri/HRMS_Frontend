@@ -1,6 +1,5 @@
 import api from "@/api/api";
 import { notify } from "@/components/custom/Notification";
-import type { TravelingUser } from "@/components/custom/UploadTravelDocuments";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
@@ -65,15 +64,111 @@ interface InputData {
   expenseDate: string;
 }
 
+interface DraftFile {
+  name: string;
+  data: string;
+}
+
+interface DraftExpense {
+  expense: Expense;
+  splits: ITravelingUser[];
+  users: ITravelingUser[];
+  files: DraftFile[];
+}
+
 export default function AddExpense() {
   const { user } = useAuth();
   const { travelId } = useParams();
   const [date, setDate] = useState<Date>(new Date());
   const [usersList, setUsersList] = useState<ITravelingUser[]>([]);
-  const [sharingExpense, setSharingExpense] = useState<TravelingUser[]>([]);
+  const [sharingExpense, setSharingExpense] = useState<ITravelingUser[]>([]);
   const [splitAmount, setSplitAmount] = useState(0);
 
   const [selectedFile, setSelectedFile] = useState<File[]>([]);
+
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const [isDraft, setIsDraft] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<InputData>();
+
+  useEffect(() => {
+    if (!travelId) return;
+
+    const key = `DraftAll${travelId}`;
+    let draftString = localStorage.getItem(key);
+
+    if (!draftString) {
+      const expense = localStorage.getItem(`Draft${travelId}`);
+      const splits = localStorage.getItem(`DraftSpits${travelId}`);
+      const users = localStorage.getItem(`DraftUsers${travelId}`);
+      if (expense && splits && users) {
+        try {
+          const expData: Expense = JSON.parse(expense);
+          const splitData: ITravelingUser[] = JSON.parse(splits);
+          const userData: ITravelingUser[] = JSON.parse(users);
+          const migrated: DraftExpense = {
+            expense: expData,
+            splits: splitData,
+            users: userData,
+            files: [],
+          };
+          localStorage.setItem(key, JSON.stringify(migrated));
+          localStorage.removeItem(`Draft${travelId}`);
+          localStorage.removeItem(`DraftSpits${travelId}`);
+          localStorage.removeItem(`DraftUsers${travelId}`);
+          draftString = JSON.stringify(migrated);
+        } catch (e) {
+          console.error("Failed to migrate old draft data", e);
+        }
+      }
+    }
+
+    if (draftString) {
+      try {
+        const draft: DraftExpense = JSON.parse(draftString);
+        setIsDraft(true);
+        setSharingExpense(draft.splits);
+        setUsersList(draft.users);
+        setSplitAmount(draft.expense.amount);
+        reset({
+          amount: draft.expense.amount,
+          category: draft.expense.category,
+          expenseDate: draft.expense.expenseDate,
+        });
+        setDate(new Date(draft.expense.expenseDate));
+
+        if (draft.files && draft.files.length > 0) {
+          const restored = draft.files.map((f) => {
+            const parts = f.data.split(",");
+            const mime = parts[0].match(/:(.*?);/)?.[1] || "";
+            const bstr = atob(parts[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+              u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], f.name, { type: mime });
+          });
+          setSelectedFile(restored);
+        }
+      } catch (e) {
+        console.error("Failed to parse draft data", e);
+      }
+    }
+  }, [travelId]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -82,27 +177,22 @@ export default function AddExpense() {
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["travelingUsersData"],
-    queryFn: () =>
-      api
+    queryKey: ["travelingUsersData", travelId],
+    queryFn: async () => {
+      return await api
         .get<ITravelingUser[]>(`/travel/traveling-user/${travelId}`)
-        .then((res) => res.data),
+        .then((res) => res.data);
+    },
+    enabled: !!travelId && usersList.length === 0,
   });
 
   useEffect(() => {
-    if (data) {
+    if (data && usersList.length === 0) {
       setUsersList(data.filter((item) => item.user.userId !== user?.userId));
       const me = data.filter((item) => item.user.userId === user?.userId);
       setSharingExpense(me);
     }
   }, [data]);
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<InputData>();
 
   const addExpense = useMutation({
     mutationFn: async (data: Expense) => {
@@ -139,38 +229,39 @@ export default function AddExpense() {
       notify.error("Logged out", "Please login again");
       return;
     }
+
     if (!travelId) {
       notify.error("Travel id not found");
       return;
     }
 
-    if (!selectedFile) {
-      notify.error("Select Proof file");
-      return;
+    const expSplit = sharingExpense.map((item) => ({
+      splitAmount: splitAmount / sharingExpense.length,
+      travelingUserId: item.travelingUserId,
+    }));
+
+    if (!isDraft) {
+      if (selectedFile.length === 0) {
+        notify.error("Select Proof file");
+        return;
+      }
+
+      if (expSplit.length < 1) {
+        notify.error("Error", "No user selected for split");
+        return;
+      }
     }
 
-    let expSplit = sharingExpense.map((item) => {
-      return {
-        splitAmount: splitAmount / sharingExpense.length,
-        travelingUserId: item.travelingUserId,
-      };
-    });
-
-    if (expSplit.length < 1) {
-      notify.error("Error", "No user selected for split");
-      return;
-    }
-
-    const formData = new FormData();
-
-    for (const element of selectedFile) {
-      formData.append("files", element);
-    }
-
-    let publicIds;
+    let publicIds: ProofPath[] | null = null;
 
     try {
-      publicIds = await addMultipleFiles.mutateAsync(formData);
+      if (selectedFile.length > 0) {
+        const formData = new FormData();
+        for (const element of selectedFile) {
+          formData.append("files", element);
+        }
+        publicIds = await addMultipleFiles.mutateAsync(formData);
+      }
 
       const payload: Expense = {
         amount: data.amount,
@@ -179,22 +270,50 @@ export default function AddExpense() {
         uploadedByUserId: user.userId,
         travelId: Number(travelId),
         expensesSplits: expSplit,
-        expenseProof: publicIds,
+        expenseProof: publicIds || [],
       };
 
-      await addExpense.mutateAsync(payload);
+      if (isDraft) {
+        const filesData: DraftFile[] = await Promise.all(
+          selectedFile.map(async (f) => ({
+            name: f.name,
+            data: await fileToBase64(f),
+          })),
+        );
+
+        const draftObj: DraftExpense = {
+          expense: payload,
+          splits: sharingExpense,
+          users: usersList,
+          files: filesData,
+        };
+
+        localStorage.setItem(`DraftAll${travelId}`, JSON.stringify(draftObj));
+        notify.success("Draft", "Expense saved as draft");
+      } else {
+        await addExpense.mutateAsync(payload);
+        localStorage.removeItem(`DraftAll${travelId}`);
+      }
     } catch (error: any) {
       notify.error("Error", "Error in adding expense");
-      console.error(error.cause);
-      await api.delete("/doc/multiple", {
-        data: publicIds,
-        withCredentials: true,
-      });
+      console.error(error);
+
+      if (publicIds && publicIds.length > 0) {
+        try {
+          const deletePayload = publicIds.map((val) => val.publicId);
+
+          await api.delete("/doc/multiple", {
+            data: deletePayload,
+            withCredentials: true,
+          });
+        } catch (deleteError) {
+          console.error("Error deleting uploaded files:", deleteError);
+        }
+      }
     }
   };
 
   const handleAddSplit = (item: ITravelingUser) => {
-
     if (
       item.travelBalance - item.usedBalance <
       splitAmount / (sharingExpense.length + 1)
@@ -212,6 +331,17 @@ export default function AddExpense() {
     );
   };
 
+  const handleRemoveFormSplit = (item: ITravelingUser) => {
+    if (item.user.userId === user?.userId) {
+      notify.error("Can not remove your self");
+      return;
+    }
+    setSharingExpense((prev) =>
+      prev.filter((val) => val.travelingUserId != item.travelingUserId),
+    );
+    setUsersList((prev) => [...prev, item]);
+  };
+
   if (isLoading)
     return <div className="flex items-center justify-center">Loading...</div>;
 
@@ -227,6 +357,15 @@ export default function AddExpense() {
         onSubmit={handleSubmit(onSubmit)}
         className="grid grid-cols-1 md:grid-cols-2 gap-4"
       >
+        <div className="flex items-center gap-2  col-span-2">
+          <input
+            type="checkbox"
+            id="draft"
+            checked={isDraft}
+            onChange={() => setIsDraft((prev) => !prev)}
+          />
+          <label htmlFor="draft">Draft</label>
+        </div>
         <div className="">
           <label htmlFor="amount">Amount</label>
           <Input
@@ -250,7 +389,7 @@ export default function AddExpense() {
             control={control}
             rules={{ required: "Category is required" }}
             render={({ field }) => (
-              <Select onValueChange={field.onChange}>
+              <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="bg-white text-black">
                   <SelectValue placeholder="Select Status" />
                 </SelectTrigger>
@@ -302,12 +441,17 @@ export default function AddExpense() {
         <div className="col-span-2">
           <label htmlFor="proof">Add Expense Proof</label>
           <div className="flex gap-4">
-            <Input type="file" id="proof" onChange={handleFileChange} required />
+            <Input
+              type="file"
+              id="proof"
+              onChange={handleFileChange}
+              required={!isDraft}
+            />
           </div>
           <div className="">
             {selectedFile.length > 0 &&
               selectedFile.map((item, index) => (
-                <div className="" key={item.name+index}>
+                <div className="" key={item.name + index}>
                   {item.name}
                 </div>
               ))}
@@ -316,11 +460,9 @@ export default function AddExpense() {
         <div className="">
           <Button
             className="bg-black text-white"
-            disabled={
-              addExpense.isPending || addMultipleFiles.isPending
-            }
+            disabled={addExpense.isPending || addMultipleFiles.isPending}
           >
-            Add Expense
+            {isDraft ? "Save As Draft" : "Add Expense"}
           </Button>
         </div>
       </form>
@@ -331,6 +473,7 @@ export default function AddExpense() {
             <div
               className="border grid grid-cols-2 items-center p-2 rounded-md"
               key={item.travelingUserId}
+              onClick={() => handleRemoveFormSplit(item)}
             >
               <div className="">{item.user.name}</div>
               <div className="justify-self-end">
@@ -353,9 +496,7 @@ export default function AddExpense() {
             <Button
               className="justify-self-end bg-black text-white"
               onClick={() => handleAddSplit(item)}
-              disabled={
-                addExpense.isPending || addMultipleFiles.isPending
-              }
+              disabled={addExpense.isPending || addMultipleFiles.isPending}
             >
               Add
             </Button>

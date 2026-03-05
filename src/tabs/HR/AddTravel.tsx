@@ -149,7 +149,7 @@ export default function AddTravel() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup className="bg-white text-black">
-                    <SelectItem value="ON_HOLD">On Hold</SelectItem>
+                    <SelectItem value="ONHOLD">On Hold</SelectItem>
                     <SelectItem value="COMPLETED">Completed</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
                   </SelectGroup>
@@ -168,6 +168,7 @@ export default function AddTravel() {
           <Input
             type="number"
             id="budget"
+            min={0}
             defaultValue={1000}
             className="bg-white text-black"
             {...register("assignedBudget", {
@@ -185,6 +186,7 @@ export default function AddTravel() {
           <label htmlFor="expense">Total Expense Till Now</label>
           <Input
             type="number"
+            min={0}
             id="expense"
             defaultValue={0}
             className="bg-white text-black"

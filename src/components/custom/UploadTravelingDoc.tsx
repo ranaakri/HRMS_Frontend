@@ -43,10 +43,9 @@ function UploadedFiles({
 }) {
   const options = { timeZone: "Asia/Kolkata" };
   const { user } = useAuth();
-  const {confirm, ConfirmComponent} = useConfirm();
+  const { confirm, ConfirmComponent } = useConfirm();
 
   const deleteDoc = useMutation({
-
     mutationFn: async (docId: number) => {
       return await api.delete(RouteList.uploadTravelingDocs + "/" + docId, {
         withCredentials: true,
@@ -90,7 +89,9 @@ function UploadedFiles({
             >
               {index + 1}. {item.docType.replace("_", " ")}
             </a>
-            <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100 border-none shadow-none">{item.staus}</Badge>
+            <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100 border-none shadow-none">
+              {item.staus}
+            </Badge>
             <div className="text-sm text-gray-500">
               {new Date(item.uploadedAt).toLocaleDateString(undefined, options)}
             </div>
@@ -108,12 +109,16 @@ function UploadedFiles({
             </div>
           </div>
         ))}
-        {ConfirmComponent}
+      {ConfirmComponent}
     </div>
   );
 }
 
-export default function UploadTravelingDocs({ item }: { readonly item: TravelingUser }) {
+export default function UploadTravelingDocs({
+  item,
+}: {
+  readonly item: TravelingUser;
+}) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [docType, setDocType] = useState<string>();
   const [uploadedDoc, setUploadedDoc] = useState<DocumentInfo[]>([]);
@@ -174,7 +179,7 @@ export default function UploadTravelingDocs({ item }: { readonly item: Traveling
         <h3 className="text-lg font-bold text-gray-900">{item.user.name}</h3>
         <p className="text-sm text-gray-500">{item.user.email}</p>
       </div>
-      
+
       {user?.role !== "Manager" && (
         <div className="flex flex-col md:flex-row gap-3 mb-6 p-4 bg-gray-50 rounded-lg">
           <Input
@@ -184,7 +189,7 @@ export default function UploadTravelingDocs({ item }: { readonly item: Traveling
             className="bg-white md:max-w-xs"
           />
           <div className="flex gap-2 flex-1">
-            <Select onValueChange={(value) => setDocType(value)} required >
+            <Select onValueChange={(value) => setDocType(value)} required>
               <SelectTrigger className="bg-white">
                 <SelectValue placeholder="Select Document Type" />
               </SelectTrigger>
@@ -204,13 +209,15 @@ export default function UploadTravelingDocs({ item }: { readonly item: Traveling
           </div>
         </div>
       )}
-      
+
       <div className="border-t pt-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Uploaded Documents</h4>
-      <UploadedFiles
-        uploadedDocs={uploadedDoc}
-        setUploadedDocs={setUploadedDoc}
-      />
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+          Uploaded Documents
+        </h4>
+        <UploadedFiles
+          uploadedDocs={uploadedDoc}
+          setUploadedDocs={setUploadedDoc}
+        />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@ import api from "@/api/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RouteList } from "@/api/routes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useAuth } from "@/context/AuthContext";
 import {
   Select,
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { notify } from "@/components/custom/Notification";
 import { useParams } from "react-router-dom";
@@ -34,15 +34,30 @@ export interface UploadedBy {
   email: string;
 }
 
-function UploadedFiles({ uploadedDocs }: { readonly uploadedDocs: DocumentInfo[] }) {
-  const options = { timeZone: "Asia/Kolkata" }
-  const {confirm, ConfirmComponent} = useConfirm()
+function UploadedFiles({
+  uploadedDocs,
+  setUploadedDocs,
+}: {
+  readonly uploadedDocs: DocumentInfo[];
+  readonly setUploadedDocs: Dispatch<SetStateAction<DocumentInfo[]>>;
+}) {
+  const options = { timeZone: "Asia/Kolkata" };
+  const { confirm, ConfirmComponent } = useConfirm();
 
-  const [docList, setDocList] = useState<DocumentInfo[]>([]);
-
-  useEffect(() => {
-    setDocList(uploadedDocs);
-  }, [uploadedDocs]);
+  const deleteDoc = useMutation({
+    mutationFn: async (docId: number) => {
+      return await api.delete(RouteList.uploadTravelingDocs + "/" + docId, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: () => {
+      notify.success("Document deleted succesfully");
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+    },
+  });
 
   const handleDeleteDoc = async (docId: number) => {
     const res = await confirm("Are you sure you want to delete document");
@@ -50,46 +65,48 @@ function UploadedFiles({ uploadedDocs }: { readonly uploadedDocs: DocumentInfo[]
     if (!res) return;
 
     try {
-      await api.delete(RouteList.uploadTravelingDocs + "/" + docId, {
-        withCredentials: true,
-      });
-      setDocList(docList.filter((res) => res.docId != docId));
-      notify.success("Documnet deleted successfully");
+      await deleteDoc.mutateAsync(docId);
+      setUploadedDocs(uploadedDocs.filter((res) => res.docId != docId));
     } catch (error: any) {
-      console.error(error.response.data.message);
-      notify.error("Error", error.response);
+      console.error(error.response);
+      notify.error("Error", error.response.data.message);
     }
   };
 
   return (
-    <div className="">
+    <div className="mt-4 space-y-2">
       {uploadedDocs.length > 0 &&
         uploadedDocs.map((item, index) => (
           <div
-            className="grid grid-cols-2 md:grid-cols-4 gap-2 items-center m-2"
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center p-3 rounded-lg border border-gray-100 bg-gray-50/50"
             key={item.docId}
           >
             <a
               href={item.filePath}
-              className="text-blue-500 underline"
+              className="text-blue-600 hover:text-blue-800 underline font-medium truncate"
               target="_blank"
             >
-              {index}. {item.docType}
+              {index + 1}. {item.docType.replace("_", " ")}
             </a>
-            <Badge className="border text-white">{item.staus}</Badge>
-            <div className="">
+            <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100 border-none shadow-none">
+              {item.staus}
+            </Badge>
+            <div className="text-sm text-gray-500">
               {new Date(item.uploadedAt).toLocaleDateString(undefined, options)}
             </div>
-            <Button
-              variant={"default"}
-              className="bg-red-500"
-              onClick={() => handleDeleteDoc(item.docId)}
-            >
-              Remove
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8"
+                onClick={() => handleDeleteDoc(item.docId)}
+                disabled={deleteDoc.isPending}
+              >
+                Remove
+              </Button>
+            </div>
           </div>
         ))}
-        {ConfirmComponent}
+      {ConfirmComponent}
     </div>
   );
 }
@@ -99,7 +116,7 @@ export default function UploadTravelingDocsEmp() {
   const [docType, setDocType] = useState<string>();
   const [uploadedDoc, setUploadedDoc] = useState<DocumentInfo[]>([]);
   const { user } = useAuth();
-  const {travelId} = useParams();
+  const { travelId } = useParams();
 
   const { data } = useQuery({
     queryKey: ["uplaodedDocuments", user?.userId],
@@ -151,38 +168,46 @@ export default function UploadTravelingDocsEmp() {
   };
 
   return (
-    <div className="p-4 rounded-md bg-white shadow-md border-0 m-2">
-      <p className="font-semibold text-black mb-2">My Documents</p>
-      {user?.role === "Manager" && (
-        <div className="flex gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              required
-              className="bg-white"
-            />
-            <Select onValueChange={(value) => setDocType(value)} required>
-              <SelectTrigger className="w-full max-w-48 bg-white">
-                <SelectValue placeholder="Select Document Type" />
-              </SelectTrigger>
-              <SelectContent className="bg-white">
-                <SelectGroup>
-                  <SelectItem value="AADHAAR_CARD">Aadhar card</SelectItem>
-                  <SelectItem value="PAN_CARD">Pan card</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
+    <div className="p-6 rounded-xl bg-white shadow-sm border border-gray-200 m-4">
+      <div className="mb-4">
+        <h3 className="text-lg font-bold text-gray-900">My documents</h3>
+      </div>
+      <div className="flex flex-col md:flex-row gap-3 mb-6 p-4 bg-gray-50 rounded-lg">
+        <Input
+          type="file"
+          onChange={handleFileChange}
+          required
+          className="bg-white md:max-w-xs"
+        />
+        <div className="flex gap-2 flex-1">
+          <Select onValueChange={(value) => setDocType(value)} required>
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="Select Document Type" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectGroup>
+                <SelectItem value="AADHAAR_CARD">Aadhar card</SelectItem>
+                <SelectItem value="PAN_CARD">Pan card</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           <Button
-            className="bg-gray-500 text-white cursor-pointer hover:bg-gray-900 duration-200"
+            className="bg-black text-white hover:bg-gray-800 px-8"
             onClick={handleFileUpload}
           >
-            Add
+            Upload
           </Button>
         </div>
-      )}
-      <UploadedFiles uploadedDocs={uploadedDoc} />
+      </div>
+      <div className="border-t pt-4">
+        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+          Uploaded Documents
+        </h4>
+        <UploadedFiles
+          uploadedDocs={uploadedDoc}
+          setUploadedDocs={setUploadedDoc}
+        />
+      </div>
     </div>
   );
 }

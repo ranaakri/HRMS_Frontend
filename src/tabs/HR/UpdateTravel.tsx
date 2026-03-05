@@ -115,6 +115,10 @@ export default function UpdateTravelDetails() {
       await api
         .post(`travel/gallery/${travelId}`, formData, { withCredentials: true })
         .then((res) => res.data),
+    onSuccess: (data) => {
+      setImages((prev) => [...prev, ...data])
+      notify.success("Image uploaded successfully");
+    },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
       console.error(error.response);
@@ -127,12 +131,12 @@ export default function UpdateTravelDetails() {
     }
   }, [data]);
 
-  useEffect(() => {
-    if (imageUpload.isSuccess && imageUpload.data) {
-      setImages((prev) => [...prev, imageUpload.data]);
-      notify.success("Image uploaded successfully");
-    }
-  }, [imageUpload.data, imageUpload.isSuccess]);
+  // useEffect(() => {
+  //   if (imageUpload.isSuccess && imageUpload.data) {
+  //     setImages((prev) => [...prev, imageUpload.data]);
+  //     notify.success("Image uploaded successfully");
+  //   }
+  // }, [imageUpload.data, imageUpload.isSuccess]);
 
   const onSubmit = async (data: IAddTravelDetails) => {
     const finalData = {
@@ -258,7 +262,7 @@ export default function UpdateTravelDetails() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup className="bg-white text-black">
-                      <SelectItem value="ON_HOLD">On Hold</SelectItem>
+                      <SelectItem value="ONHOLD">On Hold</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
                       <SelectItem value="PENDING">Pending</SelectItem>
                       <SelectItem value="CLOSED">Closed</SelectItem>

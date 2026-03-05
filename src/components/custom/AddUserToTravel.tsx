@@ -195,10 +195,6 @@ function UpdateTravelingUsers() {
         );
         return;
       }
-      const res = await confirm(
-        "Are you sure you want to remove traveling user",
-      );
-      if (!res) return;
       return api.delete(`/travel/traveling-user/${travelingUserId}`);
     },
     onSuccess: () => {
@@ -231,9 +227,19 @@ function UpdateTravelingUsers() {
       </div>
     );
 
+  const handleRemove = async (item: ITravelingUser) => {
+    const res = await confirm("Are you sure you want to remove traveling user");
+    if (!res) return;
+    removeMutation.mutate({
+      travelingUserId: item.travelingUserId,
+      usedBalance: item.usedBalance,
+    });
+  };
+
   return (
     <Card className="bg-white p-5 md:p-10 border-0 shadow-md grid grid-cols-3 gap-4">
-      {travelingUsersData.map((item) => (
+      {travelingUsersData.length > 0 ? (
+        travelingUsersData.map((item) => (
         <div
           className="border p-5 rounded flex gap-y-2 flex-col"
           key={item.travelingUserId}
@@ -278,19 +284,17 @@ function UpdateTravelingUsers() {
             </Button>
             <Button
               className="bg-red-400 text-white border-red-700"
-              onClick={() =>
-                removeMutation.mutate({
-                  travelingUserId: item.travelingUserId,
-                  usedBalance: item.usedBalance,
-                })
-              }
+              onClick={() => handleRemove(item)}
               disabled={removeMutation.isPending}
             >
               {removeMutation.isPending ? "Removing..." : "Remove"}
             </Button>
           </div>
         </div>
-      ))}
+      ))
+      ) : (
+        <div className="flex items-center justify-center col-span-3 text-gray-500">No Traveling users found</div>
+      )}
       {ConfirmComponent}
     </Card>
   );

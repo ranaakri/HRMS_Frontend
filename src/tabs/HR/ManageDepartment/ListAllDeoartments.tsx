@@ -46,7 +46,7 @@ export default function ListAllDepartments() {
         ),
       );
     } else if (departmentQuery.data) {
-       setDepartmentList(departmentQuery.data);
+      setDepartmentList(departmentQuery.data);
     }
   }, [search, departmentQuery.data]);
 
@@ -106,19 +106,24 @@ export default function ListAllDepartments() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <h2 className="text-2xl font-bold text-gray-800">Departments</h2>
           <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3">
-          <Input
-            type="text"
+            <Input
+              type="text"
               placeholder="Search departments..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="max-w-xs bg-gray-50"
-          />
+            />
             <AddDepartment addDepartment={addDepartment} />
           </div>
         </div>
         <div className="grid gap-4">
           {departmentList.map((item) => (
-            <DepartmentCommponent key={item.departmentId} item={item} deleteDepartment={deleteDepartment} updateDepartment={updateDepartment} />
+            <DepartmentCommponent
+              key={item.departmentId}
+              item={item}
+              deleteDepartment={deleteDepartment}
+              updateDepartment={updateDepartment}
+            />
           ))}
         </div>
       </Card>
@@ -166,7 +171,9 @@ function DepartmentCommponent({
               type="text"
               placeholder="Description"
               value={data?.description}
-              onChange={(e) => setData({ ...data, description: e.target.value })}
+              onChange={(e) =>
+                setData({ ...data, description: e.target.value })
+              }
               className="bg-white"
             />
           </div>
@@ -179,17 +186,32 @@ function DepartmentCommponent({
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <div className="flex gap-2">
-          <Button 
-            variant={isUpdate ? "outline" : "secondary"} 
-            size="sm" 
+          <Button
+            variant={isUpdate ? "outline" : "secondary"}
+            size="sm"
             onClick={() => setUpdate(!isUpdate)}
           >
             {isUpdate ? "Cancel" : "Edit"}
           </Button>
-          {isUpdate && <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={handleUpdate}>Save</Button>}
+          {isUpdate && (
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleUpdate}
+            >
+              Save
+            </Button>
+          )}
         </div>
         {!isUpdate && (
-          <Button variant="destructive" className="text-red-500" size="sm" onClick={() => handleDelete()}>Delete</Button>
+          <Button
+            variant="destructive"
+            className="text-red-500"
+            size="sm"
+            onClick={() => handleDelete()}
+          >
+            Delete
+          </Button>
         )}
       </div>
       {ConfirmComponent}
@@ -201,52 +223,66 @@ function AddDepartment({ addDepartment }: { readonly addDepartment: any }) {
   const [departmentName, setDepartmentName] = useState<string>("");
   const [departmentDesciption, setDepartmentDesciption] = useState<string>("");
 
+  const handleAddDepartment = async () => {
+    if (departmentName.trim().length <= 0) {
+      notify.error("Enter valid department name");
+      return;
+    }
+
+    if (departmentDesciption.trim().length <= 0) {
+      notify.error("Enter valid department description");
+      return;
+    }
+
+    await addDepartment.mutateAsync({
+      name: departmentName,
+      description: departmentDesciption,
+    });
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="bg-black text-white hover:bg-gray-800">+ Add Department</Button>
-        </DialogTrigger>
+        <Button className="bg-black text-white hover:bg-gray-800">
+          + Add Department
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-white rounded-xl">
-          <DialogHeader>
-            <DialogTitle>Add new Department</DialogTitle>
-          </DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Add new Department</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="name">Department Name</Label>
-          <Input
-            id="name"
+            <Input
+              id="name"
               placeholder="e.g. Engineering"
-            required
-            onChange={(e) => setDepartmentName(e.target.value)}
-          />
+              required
+              onChange={(e) => setDepartmentName(e.target.value)}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="descrption">Description</Label>
-          <Input
-            id="descrption"
+            <Input
+              id="descrption"
               placeholder="Brief description of the department"
-            required
-            onChange={(e) => setDepartmentDesciption(e.target.value)}
-          />
+              required
+              onChange={(e) => setDepartmentDesciption(e.target.value)}
+            />
           </div>
         </div>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </DialogClose>
+          <Button
             className="bg-black text-white"
-              onClick={async () =>
-                await addDepartment.mutateAsync({
-                  name: departmentName,
-                  description: departmentDesciption,
-                })
-              }
-            >
-              Save changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+            onClick={() => handleAddDepartment()}
+          >
+            Save changes
+          </Button>
+        </DialogFooter>
+      </DialogContent>
     </Dialog>
   );
 }

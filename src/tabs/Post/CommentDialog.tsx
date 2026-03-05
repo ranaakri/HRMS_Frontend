@@ -97,7 +97,7 @@ export default function CommentsDialog({
   const handleAdd = async () => {
     if (!user || !postId) return;
 
-    if (commentText && commentText.trim().length <= 0) {
+    if (!commentText || commentText.trim().length <= 0) {
       notify.error("Error", "Comment can not be empty");
       return;
     }
