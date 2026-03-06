@@ -94,7 +94,8 @@ export default function AddExpense() {
       reader.readAsDataURL(file);
     });
 
-  const [isDraft, setIsDraft] = useState(false);
+  const [isDraft, setIsDraft] = useState<boolean>();
+  const [executeQuery, setExecuteQuery] = useState(false)
 
   const {
     register,
@@ -109,32 +110,6 @@ export default function AddExpense() {
 
     const key = `DraftAll${travelId}`;
     let draftString = localStorage.getItem(key);
-
-    if (!draftString) {
-      const expense = localStorage.getItem(`Draft${travelId}`);
-      const splits = localStorage.getItem(`DraftSpits${travelId}`);
-      const users = localStorage.getItem(`DraftUsers${travelId}`);
-      if (expense && splits && users) {
-        try {
-          const expData: Expense = JSON.parse(expense);
-          const splitData: ITravelingUser[] = JSON.parse(splits);
-          const userData: ITravelingUser[] = JSON.parse(users);
-          const migrated: DraftExpense = {
-            expense: expData,
-            splits: splitData,
-            users: userData,
-            files: [],
-          };
-          localStorage.setItem(key, JSON.stringify(migrated));
-          localStorage.removeItem(`Draft${travelId}`);
-          localStorage.removeItem(`DraftSpits${travelId}`);
-          localStorage.removeItem(`DraftUsers${travelId}`);
-          draftString = JSON.stringify(migrated);
-        } catch (e) {
-          console.error("Failed to migrate old draft data", e);
-        }
-      }
-    }
 
     if (draftString) {
       try {
@@ -167,8 +142,11 @@ export default function AddExpense() {
       } catch (e) {
         console.error("Failed to parse draft data", e);
       }
+    }else{
+      setIsDraft(false);
+      setExecuteQuery(true);
     }
-  }, [travelId]);
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -177,13 +155,13 @@ export default function AddExpense() {
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["travelingUsersData", travelId],
+    queryKey: ["travelingUsersData", travelId, isDraft],
     queryFn: async () => {
       return await api
         .get<ITravelingUser[]>(`/travel/traveling-user/${travelId}`)
         .then((res) => res.data);
     },
-    enabled: !!travelId && usersList.length === 0,
+    enabled: !!travelId && executeQuery,
   });
 
   useEffect(() => {

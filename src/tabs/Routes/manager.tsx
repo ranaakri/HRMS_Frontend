@@ -25,6 +25,9 @@ import Home from "../Post/Home.tsx";
 import CvReviews from "../Employee/JobReferral/CvReviews.tsx";
 import ListCvForReviews from "../Employee/JobReferral/ListCvForReview.tsx";
 import MentionedPost from "../Post/MentionedPost.tsx";
+import ProfilePage from "../Post/ProfilePage.tsx";
+import ViewProfile from "../Post/ViewProfile.tsx";
+import DeletedPost from "../Post/DeletedPost.tsx";
 
 export const managerRoutes: RouteObject = {
   path: "manager",
@@ -262,14 +265,6 @@ export const managerRoutes: RouteObject = {
           ),
         },
         {
-          path: "mypost",
-          element: (
-            <ProtectedRoute requiredRole={["Manager"]}>
-              <ListAllPost myPost={true} />
-            </ProtectedRoute>
-          ),
-        },
-        {
           path: "update/:postId",
           element: (
             <ProtectedRoute requiredRole={["Manager"]}>
@@ -278,12 +273,64 @@ export const managerRoutes: RouteObject = {
           ),
         },
         {
-          path: "mentions",
+          path: "profile-view/:userId",
           element: (
-            <ProtectedRoute requiredRole={["Manager"]} >
-              <MentionedPost />
+            <ProtectedRoute requiredRole={["Manager"]}>
+              <ProfilePage myPage={false} />
             </ProtectedRoute>
-          )
+          ),
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <ViewProfile />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "mentions",
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <MentionedPost myMentions={false} />
+                </ProtectedRoute>
+              ),
+            },
+          ],
+        },
+        {
+          path: "profile",
+          element: (
+            <ProtectedRoute requiredRole={["Manager"]}>
+              <ProfilePage myPage={true} />
+            </ProtectedRoute>
+          ),
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <ListAllPost myPost={true} />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "mentions",
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <MentionedPost myMentions={true} />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "archived",
+              element: (
+                <ProtectedRoute requiredRole={["Manager"]}>
+                  <DeletedPost />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
         {
           path: "search",

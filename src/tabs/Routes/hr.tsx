@@ -35,6 +35,9 @@ import SearchByUsers from "../Post/SearchByUsers";
 import CalenderEvents from "../../components/custom/EventCalender.tsx";
 import ListAllDepartments from "../HR/ManageDepartment/ListAllDeoartments.tsx";
 import MentionedPost from "../Post/MentionedPost.tsx";
+import ProfilePage from "../Post/ProfilePage.tsx";
+import ViewProfile from "../Post/ViewProfile.tsx";
+import DeletedPost from "../Post/DeletedPost.tsx";
 
 export const hrRoutes: RouteObject = {
   path: "hr",
@@ -386,14 +389,6 @@ export const hrRoutes: RouteObject = {
           ),
         },
         {
-          path: "mypost",
-          element: (
-            <ProtectedRoute requiredRole={["HR"]}>
-              <ListAllPost myPost={true} />
-            </ProtectedRoute>
-          ),
-        },
-        {
           path: "update/:postId",
           element: (
             <ProtectedRoute requiredRole={["HR"]}>
@@ -402,12 +397,64 @@ export const hrRoutes: RouteObject = {
           ),
         },
         {
-          path: "mentions",
+          path: "profile-view/:userId",
           element: (
-            <ProtectedRoute requiredRole={["HR"]} >
-              <MentionedPost />
+            <ProtectedRoute requiredRole={["HR"]}>
+              <ProfilePage myPage={false} />
             </ProtectedRoute>
-          )
+          ),
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute requiredRole={["HR"]}>
+                  <ViewProfile />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "mentions",
+              element: (
+                <ProtectedRoute requiredRole={["HR"]}>
+                  <MentionedPost myMentions={false} />
+                </ProtectedRoute>
+              ),
+            },
+          ],
+        },
+        {
+          path: "profile",
+          element: (
+            <ProtectedRoute requiredRole={["HR"]}>
+              <ProfilePage myPage={true} />
+            </ProtectedRoute>
+          ),
+          children: [
+            {
+              index: true,
+              element: (
+                <ProtectedRoute requiredRole={["HR"]}>
+                  <ListAllPost myPost={true} />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "mentions",
+              element: (
+                <ProtectedRoute requiredRole={["HR"]}>
+                  <MentionedPost myMentions={true} />
+                </ProtectedRoute>
+              ),
+            },
+            {
+              path: "archived",
+              element: (
+                <ProtectedRoute requiredRole={["HR"]}>
+                  <DeletedPost />
+                </ProtectedRoute>
+              ),
+            },
+          ],
         },
         {
           path: "search",

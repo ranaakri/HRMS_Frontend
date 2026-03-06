@@ -8,16 +8,9 @@ import InfiniteScroll from "./InfiniteScroll";
 import WarnDeleteDialog from "./WarnDeleteDialog";
 import LikesDialog from "./LikeDialog";
 import CommentsDialog from "./CommentDialog";
-import { useParams } from "react-router-dom";
 
-export default function MentionedPost({
-  myMentions,
-}: {
-  myMentions: boolean;
-}) {
+export default function DeletedPost() {
   const { user } = useAuth();
-
-  const { userId } = useParams();
 
   const [page, setPage] = useState(0);
   const [postData, setPostData] = useState<PostResponse[]>([]);
@@ -30,11 +23,9 @@ export default function MentionedPost({
   const [warningPostId, setWarningPostId] = useState<number | null>(null);
 
   const loadPost = useQuery({
-    queryKey: ["ListMyMentions", user?.userId, userId],
+    queryKey: ["ListMyDeletedPost", user?.userId],
     queryFn: async () => {
-      let baseEndpoint = myMentions
-        ? `/post/mentions/${user?.userId}`
-        : `/post/mentions/${userId}`;
+      let baseEndpoint = `/post/deleted/${user?.userId}`
 
       const params = new URLSearchParams({
         page: page.toString(),
@@ -43,7 +34,7 @@ export default function MentionedPost({
       const res = await api.get(`${baseEndpoint}?${params.toString()}`);
       return res.data;
     },
-    enabled: !!(user?.userId || userId),
+    enabled: !!user?.userId,
   });
 
   useEffect(() => {
@@ -73,13 +64,13 @@ export default function MentionedPost({
         hasMore={hasMore}
         isLoading={loadPost.isLoading}
         loadMore={loadMore}
-        message="No more posts 🎉"
+        message="No more posts"
         renderItem={(item: PostResponse) => (
           <PostBox
             key={item.postId}
             post={item}
-            mypost={false}
-            isArchived={false}
+            mypost={true}
+            isArchived={true}
             onOpenLikes={(id) => {
               setSelectedPostId(id);
               setOpenLikes(true);

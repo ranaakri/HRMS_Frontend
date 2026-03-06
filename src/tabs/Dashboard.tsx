@@ -233,7 +233,7 @@ export default function Dashboard() {
                 </Button>
               </DialogTrigger>
 
-              <DialogContent className=" bg-white">
+              <DialogContent className="bg-white">
                 <DialogHeader>
                   <DialogTitle>Notifications</DialogTitle>
                   <DialogDescription>Unread notifications</DialogDescription>

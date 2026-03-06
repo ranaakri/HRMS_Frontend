@@ -1,6 +1,6 @@
-import { FaCameraRetro, FaHome, FaRegPlusSquare } from "react-icons/fa";
+import { FaHome, FaRegPlusSquare } from "react-icons/fa";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { IoSearch } from "react-icons/io5";
+import { IoPersonSharp, IoSearch } from "react-icons/io5";
 
 export default function Home() {
   const location = useLocation();
@@ -10,22 +10,26 @@ export default function Home() {
     { to: ".", icon: <FaHome className="size-5" />, key: "post" },
     { to: "add", icon: <FaRegPlusSquare className="size-5" />, key: "add" },
     { to: "search", icon: <IoSearch className="size-5" />, key: "search" },
-    { to: "mypost", icon: <FaCameraRetro className="size-5" />, key: "mypost" },
     {
-      to: "mentions",
-      icon: <span className="text-xl font-bold leading-none">@</span>,
-      key: "mentions",
+      to: "profile",
+      icon: (
+        <span className="text-xl font-bold leading-none">
+          <IoPersonSharp />
+        </span>
+      ),
+      key: "profile",
     },
   ];
 
   const isActive = (to: string, key: string) => {
-    if (to === "." && (currentPath === "post" || currentPath === "")) return true;
+    if (to === "." && (currentPath === "post" || currentPath === ""))
+      return true;
     return currentPath === key;
   };
 
   return (
     <div className="min-h-screen relative pb-28">
-      <div className="max-w-4xl mx-auto pt-6">
+      <div className="mx-auto pt-6">
         <Outlet />
       </div>
 

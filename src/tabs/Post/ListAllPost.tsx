@@ -56,7 +56,7 @@ export default function ListAllPost({
       if (userIdFilter) {
         baseEndpoint = `/post/my/${userIdFilter}`;
       } else if (deletedPost) {
-        baseEndpoint = `/api/post/warning/hr/${user?.userId}`;
+        baseEndpoint = `/post/warning/hr/${user?.userId}`;
       } else if (myPost) {
         baseEndpoint = `/post/my/${user?.userId}`;
       } else if (tags) {
@@ -79,6 +79,8 @@ export default function ListAllPost({
       const res = await api.get(`${baseEndpoint}?${params.toString()}`);
       return res.data;
     },
+    staleTime: 0,
+    gcTime: 0,
     enabled: !!user?.userId,
   });
 
@@ -120,6 +122,7 @@ export default function ListAllPost({
           <PostBox
             key={item.postId}
             post={item}
+            isArchived={false}
             mypost={myPost}
             onOpenLikes={(id) => {
               setSelectedPostId(id);
