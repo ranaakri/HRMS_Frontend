@@ -44,6 +44,8 @@ export default function MentionedPost({
       return res.data;
     },
     enabled: !!(user?.userId || userId),
+    gcTime: 0,
+    staleTime: 0,
   });
 
   useEffect(() => {

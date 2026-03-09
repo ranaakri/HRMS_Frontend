@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { type Games } from "./ListAllGames";
 import { useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/api";
 import { useDebounce } from "@/hook/DebounceHoot";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
@@ -63,6 +63,8 @@ export default function BookSlot() {
   const { user } = useAuth();
 
   const [listbool, setListbool] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["game", gameId],
@@ -132,6 +134,15 @@ export default function BookSlot() {
     },
     onSuccess: () => {
       notify.success("Booking request deleted");
+      queryClient.invalidateQueries({
+        queryKey: ["getBookingPartners"]
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["bookingList"]
+      })
+      queryClient.invalidateQueries({
+        queryKey: ["checkhasBooking"]
+      })
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);

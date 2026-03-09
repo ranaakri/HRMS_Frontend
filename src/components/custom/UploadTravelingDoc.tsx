@@ -51,8 +51,9 @@ function UploadedFiles({
         withCredentials: true,
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, docId) => {
       notify.success("Document deleted succesfully");
+      setUploadedDocs(uploadedDocs.filter((res) => res.docId != docId));
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
@@ -65,13 +66,7 @@ function UploadedFiles({
 
     if (!res) return;
 
-    try {
-      await deleteDoc.mutateAsync(docId);
-      setUploadedDocs(uploadedDocs.filter((res) => res.docId != docId));
-    } catch (error: any) {
-      console.error(error.response);
-      notify.error("Error", error.response.data.message);
-    }
+    await deleteDoc.mutateAsync(docId);
   };
 
   return (
@@ -79,7 +74,7 @@ function UploadedFiles({
       {uploadedDocs.length > 0 &&
         uploadedDocs.map((item, index) => (
           <div
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 items-center p-3 rounded-lg border border-gray-100 bg-gray-50/50"
+            className="grid grid-cols-2 md:grid-cols-5 gap-4 items-center p-3 rounded-lg border border-gray-100 bg-gray-50/50"
             key={item.docId}
           >
             <a
@@ -92,6 +87,9 @@ function UploadedFiles({
             <Badge className="w-fit bg-blue-100 text-blue-700 hover:bg-blue-100 border-none shadow-none">
               {item.staus}
             </Badge>
+            <div className="text-sm text-gray-500">
+              {item.uploadedBy.name}
+            </div>
             <div className="text-sm text-gray-500">
               {new Date(item.uploadedAt).toLocaleDateString(undefined, options)}
             </div>
@@ -144,6 +142,25 @@ export default function UploadTravelingDocs({
     }
   };
 
+  const uploadDocument = useMutation({
+    mutationFn: async (formData: FormData) => {
+      return await api
+        .post<
+          DocumentInfo[]
+        >(RouteList.uploadTravelingDocs + `/${user?.userId}/${item.travelingUserId}/${docType}`, formData, { withCredentials: true })
+        .then((res) => res.data)
+    },
+    onSuccess: (response: DocumentInfo[]) => {
+      setUploadedDoc(response);
+      setSelectedFile(null)
+      notify.success("File uploaded successfully");
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error("Error in uploading image", error.response);
+    }
+  })
+
   const handleFileUpload = async () => {
     if (!selectedFile) {
       alert("Please select an document");
@@ -158,19 +175,7 @@ export default function UploadTravelingDocs({
     const formData = new FormData();
     formData.append("file", selectedFile);
 
-    try {
-      const response = await api
-        .post<
-          DocumentInfo[]
-        >(RouteList.uploadTravelingDocs + `/${user.userId}/${item.travelingUserId}/${docType}`, formData, { withCredentials: true })
-        .then((res) => res.data);
-      setUploadedDoc(response);
-      // setUploaded([...uploaded, response])
-      notify.success("Image uploaded successfully");
-    } catch (error: any) {
-      notify.error("Error", error.response.data.message);
-      console.error("Error in uploading image", error.response);
-    }
+    uploadDocument.mutate(formData) ;
   };
 
   return (
@@ -203,6 +208,7 @@ export default function UploadTravelingDocs({
             <Button
               className="bg-black text-white hover:bg-gray-800 px-8"
               onClick={handleFileUpload}
+              disabled={uploadDocument.isPending}
             >
               Upload
             </Button>

@@ -102,7 +102,7 @@ export default function AddUserToTravel() {
           {travelingUsers.map((u) => (
             <Card
               key={u.userId}
-              className="p-2 bg-gray-100"
+              className="p-2 bg-white"
               onClick={() =>
                 setTravelingUsers(
                   travelingUsers.filter((val) => val.userId != u.userId),

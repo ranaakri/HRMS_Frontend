@@ -159,18 +159,24 @@ export default function UpdateJob({
     mutation.mutateAsync(finalData).then((data) => data.jobId);
   };
 
+  const deleteMutate = useMutation({
+    mutationFn: async () => {
+      return await api.delete(`/job/${jobId}`, { withCredentials: true });
+    },
+    onSuccess: () => {
+      notify.success("Job deleted succesfully");
+      navigate("/"+user?.role + "/job", { replace: true });
+    },
+    onError: (error: any) => {
+      notify.error("Error", error.response.data.message);
+      console.error(error.response);
+    },
+  });
+
   const handleDelete = async () => {
     const res = await confirm("Are you sure you want to delete?");
-    if (res) {
-      try {
-        await api.delete(`/job/${jobId}`, { withCredentials: true });
-        notify.success("Job deleted succesfully");
-        navigate("/job", { replace: true });
-      } catch (error: any) {
-        notify.error("Error", error.response.data.message);
-        console.error(error.response);
-      }
-    }
+
+    if (res) deleteMutate.mutate();
   };
 
   if (isLoading)

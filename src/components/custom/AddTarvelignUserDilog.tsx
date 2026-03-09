@@ -53,12 +53,14 @@ export default function AddTravelingUserDialog({
 
         <DialogContent className="bg-white">
           <form onSubmit={handleSubmit(onSubmit)}>
-            <DialogHeader className="m-2 mb-4">
+            <DialogHeader className="mt-2 mb-4">
               <DialogTitle>Add {user.name}</DialogTitle>
             </DialogHeader>
-
+            
+            <label htmlFor="travelBalance" className="text-gray-500">Travel Balance</label>
             <Input
               type="number"
+              id="travelBalance"
               min={0}
               {...register("travelBalance", { required: true })}
               placeholder="Travel balance"

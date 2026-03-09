@@ -23,12 +23,13 @@ export default function ListTravelPlans() {
     error,
   } = useQuery<TravelPlanResponse[]>({
     queryKey: ["list", page],
-    queryFn: () =>
-      api
-        .get(RouteList.listTravelPlans + "?page=" + page, {
-          withCredentials: true,
-        })
-        .then((res) => res.data.data),
+    queryFn: () =>{
+      const baseUrl = search.length > 0 ? `${RouteList.listTravelPlans}?page=${page}`
+        : `/travel/search?title=${search}&page=${page}`
+        return api
+        .get(baseUrl)
+        .then((res) => res.data.data)
+    }
   });
 
   const filteredList = useMemo(() => {
