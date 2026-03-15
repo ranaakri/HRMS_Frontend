@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/api/api";
+import { notify } from "@/components/custom/Notification";
 
 interface IForm {
   email: string;
@@ -57,7 +58,7 @@ export default function LoginPage() {
         error?.message ||
         "Something went wrong. Please try again.";
 
-      alert(message)
+      notify.error(message)
       console.error("Login error:", error);
     },
   });

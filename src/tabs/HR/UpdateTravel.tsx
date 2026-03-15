@@ -265,6 +265,7 @@ export default function UpdateTravelDetails() {
                       <SelectItem value="ONHOLD">On Hold</SelectItem>
                       <SelectItem value="COMPLETED">Completed</SelectItem>
                       <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="ONGOING">Ongoing</SelectItem>
                       <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectGroup>
                   </SelectContent>

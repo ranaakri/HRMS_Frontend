@@ -135,14 +135,14 @@ export default function BookSlot() {
     onSuccess: () => {
       notify.success("Booking request deleted");
       queryClient.invalidateQueries({
-        queryKey: ["getBookingPartners"]
-      })
+        queryKey: ["getBookingPartners"],
+      });
       queryClient.invalidateQueries({
-        queryKey: ["bookingList"]
-      })
+        queryKey: ["bookingList"],
+      });
       queryClient.invalidateQueries({
-        queryKey: ["checkhasBooking"]
-      })
+        queryKey: ["checkhasBooking"],
+      });
     },
     onError: (error: any) => {
       notify.error("Error", error.response.data.message);
@@ -183,7 +183,9 @@ export default function BookSlot() {
   } else {
     bookingListData = (
       <div className="p-4">
-        <h3 className="text-gray-800 font-bold text-xl mb-4 border-b pb-2">Bookings</h3>
+        <h3 className="text-gray-800 font-bold text-xl mb-4 border-b pb-2">
+          Bookings
+        </h3>
         {bookingsData.length > 0 ? (
           bookingsData.map((item, index) => (
             <div
@@ -212,13 +214,22 @@ export default function BookSlot() {
             <div className="">
               <div className="flex justify-between items-center">
                 <span className="font-bold text-lg">
-                  Status: <span className="text-black uppercase">{getStatus.data.status || "PENDING"}</span>
+                  Status:{" "}
+                  <span className="text-black uppercase">
+                    {getStatus.data.status || "PENDING"}
+                  </span>
                 </span>
                 {getStatus.data.status !== "DELETED" &&
+                  getStatus.data.status !== "REJECTED" &&
                   getStatus.data.requestBy.userId === user?.userId &&
                   slotInfo.startTime &&
                   new Date() < new Date(slotInfo.startTime) && (
-                    <Button variant="outline" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => deleteBooking.mutate()} disabled={deleteBooking.isPending}>
+                    <Button
+                      variant="outline"
+                      className="border-red-200 text-red-600 hover:bg-red-50"
+                      onClick={() => deleteBooking.mutate()}
+                      disabled={deleteBooking.isPending}
+                    >
                       Cancel Booking
                     </Button>
                   )}
@@ -234,7 +245,9 @@ export default function BookSlot() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-gray-400 text-sm">No game partners found</div>
+                  <div className="text-gray-400 text-sm">
+                    No game partners found
+                  </div>
                 )}
               </div>
             </div>
@@ -292,7 +305,9 @@ function GamesCard({
 }) {
   return (
     <div className="space-y-4">
-      <h2 className="font-black text-4xl tracking-tight text-black uppercase">{game.name}</h2>
+      <h2 className="font-black text-4xl tracking-tight text-black uppercase">
+        {game.name}
+      </h2>
       <div className="grid grid-cols-2 gap-4 py-4 border-y border-gray-100">
         <p className="text-sm text-gray-600">
           <b className="text-black block">Min. Players</b> {game.minPlayers}
@@ -304,18 +319,26 @@ function GamesCard({
           <b className="text-black block">Duration</b> {game.slotDuration} mins
         </p>
         <p className="text-sm text-gray-600">
-          <b className="text-black block">Game Hours</b> {game.openTime} - {game.closeTime}
+          <b className="text-black block">Game Hours</b> {game.openTime} -{" "}
+          {game.closeTime}
         </p>
       </div>
       <div className="bg-gray-600 text-white p-4 rounded-lg flex justify-between items-center">
         <div>
-          <p className="text-[10px] uppercase tracking-widest opacity-70">Start Time</p>
+          <p className="text-[10px] uppercase tracking-widest opacity-70">
+            Start Time
+          </p>
           <p className="text-lg font-bold">
-            {new Date(slot.startTime).toLocaleTimeString(undefined, DateOptions)}
+            {new Date(slot.startTime).toLocaleTimeString(
+              undefined,
+              DateOptions,
+            )}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[10px] uppercase tracking-widest opacity-70">End Time</p>
+          <p className="text-[10px] uppercase tracking-widest opacity-70">
+            End Time
+          </p>
           <p className="text-lg font-bold">
             {new Date(slot.endTime).toLocaleTimeString(undefined, DateOptions)}
           </p>
@@ -482,15 +505,14 @@ function AddUserToGame({
             ))}
           </div>
 
-          
           <div className="">
             <Button
-            onClick={() => handleBooking()}
-            disabled={bookSlot.isPending}
-            className="bg-black text-white hover:bg-gray-900 mt-4"
-          >
-            {bookSlot.isPending ? "Processing..." : "Confirm Booking"}
-          </Button>
+              onClick={() => handleBooking()}
+              disabled={bookSlot.isPending}
+              className="bg-black text-white hover:bg-gray-900 mt-4"
+            >
+              {bookSlot.isPending ? "Processing..." : "Confirm Booking"}
+            </Button>
           </div>
         </div>
       )}

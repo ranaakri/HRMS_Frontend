@@ -56,7 +56,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: <LoginPage />,
+    element: (
+      <>
+        <LoginPage />
+        <Toaster />
+      </>
+    ),
   },
   {
     path: "/logout",
@@ -68,10 +73,12 @@ const router = createBrowserRouter([
   },
   {
     path: "/forgot-password",
-    element: <>
-      <ForgotPassword />
-      <Toaster />
-    </>
+    element: (
+      <>
+        <ForgotPassword />
+        <Toaster />
+      </>
+    ),
   },
   {
     path: "/unauthorized",
